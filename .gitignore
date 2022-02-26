@@ -37,8 +37,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 
-.pnp.*
+# https://yarnpkg.com/getting-started/qa#which-files-should-be-gitignored
+# zero-install
 .yarn/*
+!.yarn/cache
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
