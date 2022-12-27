@@ -6,16 +6,16 @@ interface ContentProps {
   title: string;
   description: string;
   welcome: string;
-  welcomeSubline: string;
+  subline: string;
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const content = {
+  const content: ContentProps = {
     title: "Meet Stefan Hoth - A Senior Engineering Leader",
     description:
       "Stefan Hoth is an experienced Engineering Leader based in Germany.",
     welcome: "Hi from Next.js 13 👋👋👋",
-    welcomeSubline: "And have a lovely day!",
+    subline: "And have a lovely day!",
   };
 
   return {
@@ -37,7 +37,7 @@ export default function Home({ content }: { content: ContentProps }) {
       <main className={styles.main}>
         <div className={styles.description}>
           <h1>{content.welcome}</h1>
-          <p>{content.welcomeSubline}</p>
+          <p>{content.subline}</p>
         </div>
       </main>
     </>
