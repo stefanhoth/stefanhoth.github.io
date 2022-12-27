@@ -2283,9 +2283,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stefanhoth.github.io@workspace:.":
+"stefanhoth.com@workspace:.":
   version: 0.0.0-use.local
-  resolution: "stefanhoth.github.io@workspace:."
+  resolution: "stefanhoth.com@workspace:."
   dependencies:
     "@next/font": 13.1.1
     "@types/node": 18.11.18
