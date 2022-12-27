@@ -2,20 +2,30 @@ import Head from "next/head";
 import { GetStaticProps } from "next";
 import styles from "../styles/Home.module.css";
 
+interface ContentProps {
+  title: string;
+  description: string;
+  welcome: string;
+  welcomeSubline: string;
+}
+
 export const getStaticProps: GetStaticProps = async () => {
+  const content = {
+    title: "Meet Stefan Hoth - A Senior Engineering Leader",
+    description:
+      "Stefan Hoth is an experienced Engineering Leader based in Germany.",
+    welcome: "Hi from Next.js 13 👋👋👋",
+    welcomeSubline: "And have a lovely day!",
+  };
+
   return {
     props: {
-      content: {
-        title: "Meet Stefan Hoth - A Senior Engineering Leader",
-        description:
-          "Stefan Hoth is an experienced Engineering Leader based in Germany.",
-        welcome: "Hi from Next.js 13 👋👋👋",
-      },
+      content,
     }, // will be passed to the page component as props
   };
 };
 
-export default function Home({ content }) {
+export default function Home({ content }: { content: ContentProps }) {
   return (
     <>
       <Head>
@@ -27,6 +37,7 @@ export default function Home({ content }) {
       <main className={styles.main}>
         <div className={styles.description}>
           <h1>{content.welcome}</h1>
+          <p>{content.welcomeSubline}</p>
         </div>
       </main>
     </>
