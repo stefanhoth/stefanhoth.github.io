@@ -1,7 +1,11 @@
 import "./globals.css";
+import styles from "./layout.module.css";
 
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+
+import { NavBar } from "@/components/chrome/navbar";
+import { Footer } from "@/components/chrome/footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,7 +22,15 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang="en">
-			<body className={inter.className}>{children}</body>
+			<body className={[inter.className, styles.container].join(" ")}>
+				<nav className={styles.navbar}>
+					<NavBar />
+				</nav>
+				<main className={styles.content}>{children}</main>
+				<footer className={styles.footer}>
+					<Footer />
+				</footer>
+			</body>
 		</html>
 	);
 }
