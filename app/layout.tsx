@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default function RootLayout({
 	children,
 }: {
-	// rome-ignore lint/correctness/noUndeclaredVariables: <explanation>
+	// rome-ignore lint/correctness/noUndeclaredVariables: React 17+ JSX implicitly imports React
 	children: React.ReactNode;
 }) {
 	return (
