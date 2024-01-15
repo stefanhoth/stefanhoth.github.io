@@ -1,10 +1,12 @@
 ---
 layout: post
-title:  "Berlin Hack and Tell"
-date:   2017-01-01 10:59:59 +0100
-img: img/portfolio/berlin_hack_and_tell.png
+title: "Berlin Hack and Tell"
+date: 2011-06-07 19:00:42 +0100
+img: berlin_hack_and_tell.png
+alt: Logo of Berlin Hack and Tell
 modalID: bhnt
 category: community
+project-date: June 2011 - ongoing
 ---
 
 (This is a Berlin clone of the original NYC Hack and Tell Meetup Group!) If you've ever visited Hacker News, you've almost certainly seen the "Show HN" or "Ask HN" posts. Well, it's time to get off the Internet and tell us about it face to face. We'll provide you with our honest feedback, you provide us with a great hack, or idea.

@@ -2,8 +2,8 @@
 layout: post
 title: "Engineering Leader for hire"
 date: 2024-01-01 00:00:42 +0100
-img: img/portfolio/for-hire.jpg
-modalID: forhire
+img: for-hire.png
+modal-id: forhire
 category: career
 ---
 
