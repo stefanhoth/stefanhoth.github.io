@@ -11,7 +11,7 @@
 
 <!-- Contact Form JavaScript -->
 <script src="{{ " js/jqBootstrapValidation.js" }}"></script>
-{% if site.contact == "static" %}
+{% if site.contact == "static" || site.contact == "custom" %}
 <script src="{{ " js/contact_me_static.js" }}"></script>
 {% else %}
 <script src="{{ " js/contact_me.js" }}"></script>
