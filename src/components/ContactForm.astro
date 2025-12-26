@@ -1,0 +1,15 @@
+---
+// Contact form component with Netlify Forms integration
+---
+
+<form name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+  <input type="hidden" name="form-name" value="contact" />
+  <p class="hidden">
+    <label>Don't fill this out: <input name="bot-field" /></label>
+  </p>
+  <input type="text" name="name" placeholder="Dein Name" required />
+  <input type="email" name="email" placeholder="Deine Email" required />
+  <textarea name="message" rows="5" placeholder="Nachricht (z.B. zu Stellenangeboten)" required></textarea>
+  <button type="submit">Nachricht senden</button>
+</form>
+

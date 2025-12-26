@@ -6,3 +6,13 @@ _site
 .jekyll-metadata
 
 Gemfile.lock
+
+# Node
+node_modules/
+dist/
+.astro/
+
+# Environment variables
+.env
+.env.local
+.env.production
