@@ -1,12 +1,4 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Profile from '../components/Profile.astro';
-import JobHunt from '../components/JobHunt.astro';
-import About from '../components/About.astro';
-import Quote from '../components/Quote.astro';
-import Links from '../components/Links.astro';
-import ContactForm from '../components/ContactForm.astro';
-import { Button } from '@/components/ui/button';
 ---
 
 <Layout
@@ -14,11 +6,9 @@ import { Button } from '@/components/ui/button';
   description="Stefan builds successful and happy engineering teams with a focus on psychological safety and developer productivity"
 >
   <Profile />
-  <Button client:load>Shadcn Button</Button>
   <JobHunt />
   <About />
   <Quote />
   <Links />
   <ContactForm />
 </Layout>
-
