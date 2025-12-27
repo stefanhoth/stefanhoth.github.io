@@ -6,6 +6,7 @@ import About from '../components/About.astro';
 import Quote from '../components/Quote.astro';
 import Links from '../components/Links.astro';
 import ContactForm from '../components/ContactForm.astro';
+import { Button } from '@/components/ui/button';
 ---
 
 <Layout
@@ -13,6 +14,7 @@ import ContactForm from '../components/ContactForm.astro';
   description="Stefan builds successful and happy engineering teams with a focus on psychological safety and developer productivity"
 >
   <Profile />
+  <Button client:load>Shadcn Button</Button>
   <JobHunt />
   <About />
   <Quote />
