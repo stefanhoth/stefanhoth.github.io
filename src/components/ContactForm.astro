@@ -5,7 +5,6 @@
 <form
   name="website-message"
   id="contact"
-  name="contact"
   method="POST"
   data-netlify="true"
   netlify-honeypot="yummypot"
@@ -14,6 +13,7 @@
   <p class="hidden">
     <label>Don't fill this out: <input name="yummypot" /></label>
   </p>
+  <input type="hidden" name="form-name" value="website-message" />
   <input
     type="text"
     class="form-control"
