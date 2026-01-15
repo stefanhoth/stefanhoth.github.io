@@ -79,6 +79,35 @@ npm run lint:fix   # Auto-fix linting issues
 
 The site is deployed via Netlify with automatic deployments triggered when changes are pushed to the main branch. The repository is hosted on GitHub at `stefanhoth.github.io`.
 
+### Netlify Configuration
+
+The site uses a `netlify.toml` file for comprehensive configuration:
+
+**Build Settings**:
+- Build command: `npm run build`
+- Publish directory: `dist` (Astro output)
+- Node.js version: 24
+
+**Redirects**:
+- All domain aliases (stefan-hoth.de, www.stefanhoth.com, etc.) redirect to the primary domain stefanhoth.com with 301 status
+- Legacy Netlify subdomain redirects to primary domain
+
+**Security Headers**:
+- X-Frame-Options: Prevents clickjacking attacks
+- X-Content-Type-Options: Prevents MIME type sniffing
+- Strict-Transport-Security (HSTS): Enforces HTTPS for 1 year
+- Content-Security-Policy: Restricts resource loading for enhanced security
+- Referrer-Policy: Controls referrer information sharing
+- Permissions-Policy: Restricts access to browser features
+
+**Performance Optimization**:
+- Static assets (/assets/*, CSS, JS) cached for 1 year with immutable directive
+
+**Context-Specific Settings**:
+- Production: NODE_ENV=production
+- Deploy previews: NODE_ENV=preview
+- Branch deploys: NODE_ENV=development
+
 ## Working with This Codebase
 
 ### Adding New Components
