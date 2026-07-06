@@ -31,6 +31,20 @@ npm run format       # Format code
 npm run lint:fix     # Auto-fix linting issues
 ```
 
+## Deployment
+
+This site is deployed on [Netlify](https://www.netlify.com) with automatic deployments from the main branch.
+
+The Netlify configuration (`netlify.toml`) includes:
+- Build settings optimized for Astro
+- Domain redirects to primary domain
+- Security headers (CSP, HSTS, X-Frame-Options, etc.)
+- Performance optimizations with cache headers
+
+## Documentation
+
+For detailed documentation about the codebase, architecture, and development guidelines, see [CLAUDE.MD](./CLAUDE.MD).
+
 ---
 
 Built with modern web technologies. Deployed via Netlify.
