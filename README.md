@@ -1,42 +1,34 @@
-# Stefan Hoth - Personal Website
+# Stefan Hoth's Personal Website
 
-Personal portfolio and contact website built with modern web technologies.
+Welcome! This is my personal portfolio website where you can find information about my background, experience, and current projects.
+
+## Get in Touch
+
+Have questions or want to reach out? Please use the **contact form on the website** to send me a message directly. I'd love to hear from you!
 
 ## Tech Stack
 
-- **[Astro](https://astro.build)** - Modern static site generator
-- **[Tailwind CSS](https://tailwindcss.com)** - Utility-first CSS framework
-- **[React](https://react.dev)** - For interactive UI components
-- **[TypeScript](https://www.typescriptlang.org)** - Type-safe development
-- **[Biome](https://biomejs.dev)** - Fast linter and formatter
+If you want to look under the hood, here's what powers this site:
 
-## Quick Start
-
-```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-```
+- **Framework**: Astro 5.16.6
+- **Styling**: Tailwind CSS 4.1.18
+- **UI Components**: Radix UI + shadcn/ui pattern
+- **Languages**: TypeScript, Astro components
+- **Linting & Formatting**: Biome 2.3.10
+- **Deployment**: Netlify (automatic deployments on main branch)
 
 ## Development
 
+### Getting Started
+
 ```bash
-# Lint code
-npm run lint
-
-# Format code
-npm run format
-
-# Auto-fix linting issues
-npm run lint:fix
+npm install          # Install dependencies
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run linter
+npm run format       # Format code
+npm run lint:fix     # Auto-fix linting issues
 ```
 
 ## Deployment
@@ -53,6 +45,6 @@ The Netlify configuration (`netlify.toml`) includes:
 
 For detailed documentation about the codebase, architecture, and development guidelines, see [CLAUDE.MD](./CLAUDE.MD).
 
-## License
+---
 
-Personal website - All rights reserved.
+Built with modern web technologies. Deployed via Netlify.
