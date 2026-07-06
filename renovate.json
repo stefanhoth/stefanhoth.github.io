@@ -3,6 +3,11 @@
     "extends": [
         "config:recommended"
     ],
+    "rebaseWhen": "behind-base-branch",
+    "lockFileMaintenance": {
+        "enabled": true,
+        "automerge": true
+    },
     "packageRules": [
         {
             "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
