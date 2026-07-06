@@ -1,18 +1,8 @@
 ---
-// Contact form component with Netlify Forms integration
+// Contact form component — posts to the Cloudflare Pages Function at /contact
 ---
 
-<form
-  name="contact"
-  id="contact"
-  method="POST"
-  data-netlify="true"
-  netlify-honeypot="yummypot"
->
-  <input type="hidden" name="form-name" value="contact" />
-  <p class="hidden">
-    <label>Don't fill this out: <input name="yummypot" /></label>
-  </p>
+<form name="contact" id="contact" method="POST" action="/contact">
   <input
     type="text"
     class="form-control"
@@ -39,5 +29,13 @@
     name="message"
     required
     data-validation-required-message="Please enter a message."></textarea>
+  <div
+    class="cf-turnstile"
+    data-sitekey={import.meta.env.PUBLIC_TURNSTILE_SITE_KEY}
+    data-action="contact_form"
+  >
+  </div>
   <button type="submit">Let's go!</button>
 </form>
+
+<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
