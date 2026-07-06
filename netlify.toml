@@ -88,15 +88,3 @@
   for = "/*.js"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
-
-# Production context settings
-[context.production]
-  environment = { NODE_ENV = "production" }
-
-# Deploy preview context
-[context.deploy-preview]
-  environment = { NODE_ENV = "preview" }
-
-# Branch deploy context
-[context.branch-deploy]
-  environment = { NODE_ENV = "development" }
