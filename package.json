@@ -5,12 +5,14 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build",
+    "build": "astro build && wrangler pages functions build --outdir=./dist/_worker.js/",
     "preview": "astro preview",
     "astro": "astro",
     "lint": "biome lint .",
     "format": "biome format --write .",
-    "lint:fix": "biome check --write --unsafe ."
+    "lint:fix": "biome check --write --unsafe .",
+    "worker:dev": "npm run build && wrangler dev",
+    "worker:deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.0",
@@ -30,6 +32,7 @@
     "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.10"
+    "@biomejs/biome": "^2.3.10",
+    "wrangler": "^4.107.0"
   }
 }

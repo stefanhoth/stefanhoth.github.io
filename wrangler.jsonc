@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "stefanhoth-com",
+  "main": "./dist/_worker.js",
+  "compatibility_date": "2026-07-06",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"
+  },
+  "send_email": [{ "name": "EMAIL", "remote": true }]
+}

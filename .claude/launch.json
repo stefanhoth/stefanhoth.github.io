@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "wrangler-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "worker:dev", "--", "--port", "8789"],
+      "port": 8789
+    }
+  ]
+}
