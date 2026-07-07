@@ -7,17 +7,17 @@
 
 ## Ziel
 
-Jeder PR gegen `main` wird automatisch getestet (Lint + Build), und PRs können
-per Auto-Merge gemergt werden, sobald die Checks grün sind. Fehlerhafte PRs
-(z. B. von Renovate oder automatisierten Sessions) landen damit nicht mehr
-ungeprüft auf `main`.
+Jeder PR gegen `main` wird automatisch getestet (Lint + Build + Test + E2E),
+und PRs können per Auto-Merge gemergt werden, sobald die Checks grün sind.
+Fehlerhafte PRs (z. B. von Renovate oder automatisierten Sessions) landen
+damit nicht mehr ungeprüft auf `main`.
 
 ## Was bereits im Repo liegt
 
 | Datei | Zweck |
 | --- | --- |
-| `.github/workflows/ci.yml` | CI-Workflow: Jobs **Lint** (`npm run lint`) und **Build** (`npm run build`) laufen bei jedem PR und bei Pushes auf `main` |
-| `.github/rulesets/main-branch-protection.json` | Importierbares Ruleset, das die beiden Checks für `main` verpflichtend macht |
+| `.github/workflows/ci.yml` | CI-Workflow: Jobs **Lint** (`npm run lint`), **Build** (`npm run build`), **Test** (`npm run test` — Vitest, unit + jsdom) und **E2E** (`npm run test:e2e` — Playwright im echten Browser) laufen bei jedem PR und bei Pushes auf `main` |
+| `.github/rulesets/main-branch-protection.json` | Importierbares Ruleset, das die vier Checks für `main` verpflichtend macht |
 | `renovate.json` | Renovate merged Minor/Patch/Pin/Digest-Updates automatisch, sobald die Checks grün sind |
 
 ## Einmalige manuelle Schritte (GitHub-UI)
@@ -42,7 +42,8 @@ Das Ruleset erzwingt für `main`:
 
 - **Pull Request Pflicht** — keine direkten Pushes auf `main` (0 Approvals
   nötig, du kannst deine eigenen PRs also sofort mergen)
-- **Required Status Checks** — die Jobs `Lint` und `Build` müssen grün sein
+- **Required Status Checks** — die Jobs `Lint`, `Build`, `Test` und `E2E`
+  müssen grün sein
 - **Kein Force-Push, kein Branch-Delete** auf `main`
 - **Bypass für Repository-Admins** — du selbst kannst im Notfall weiterhin
   direkt auf `main` pushen; Bots (Renovate, GitHub Actions) können das nicht.
