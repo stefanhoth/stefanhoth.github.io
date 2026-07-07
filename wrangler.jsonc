@@ -3,6 +3,7 @@
   "name": "stefanhoth-com",
   "main": "./worker/index.js",
   "compatibility_date": "2026-07-06",
+  "preview_urls": true,
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS"
