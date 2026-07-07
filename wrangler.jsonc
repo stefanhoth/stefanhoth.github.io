@@ -9,5 +9,10 @@
     "directory": "./dist",
     "binding": "ASSETS"
   },
-  "send_email": [{ "name": "EMAIL", "remote": true }]
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true
+    }
+  }
 }

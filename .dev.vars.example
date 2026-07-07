@@ -1,1 +1,3 @@
 TURNSTILE_SECRET_KEY="your-turnstile-secret-key"
+MAILSENDER_SMTP_USER="your-mailbox-org-address"
+MAILSENDER_SMTP_PASS="your-mailbox-org-smtp-password"
