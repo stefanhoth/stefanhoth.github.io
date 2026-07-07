@@ -72,7 +72,9 @@ export async function sendMailViaSmtp({ host, port, username, password, from, to
     const authToken = btoa(`\0${username}\0${password}`);
     assertCode(await sendCommand(writer, reader, `AUTH PLAIN ${authToken}`), [235], "AUTH");
 
-    assertCode(await sendCommand(writer, reader, `MAIL FROM:<${from}>`), [250], "MAIL FROM");
+    // The envelope takes a bare address — `from` may be `"Display Name" <addr>`.
+    const envelopeFrom = from.match(/<([^>]+)>/)?.[1] ?? from;
+    assertCode(await sendCommand(writer, reader, `MAIL FROM:<${envelopeFrom}>`), [250], "MAIL FROM");
     assertCode(await sendCommand(writer, reader, `RCPT TO:<${to}>`), [250], "RCPT TO");
     assertCode(await sendCommand(writer, reader, "DATA"), [354], "DATA");
 

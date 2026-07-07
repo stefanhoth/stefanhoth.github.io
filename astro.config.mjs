@@ -12,5 +12,10 @@ export default defineConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    build: {
+      // Never inline scripts into the HTML — the Worker's CSP has no
+      // 'unsafe-inline' in script-src, so all scripts must be external files.
+      assetsInlineLimit: 0,
+    },
   },
 });

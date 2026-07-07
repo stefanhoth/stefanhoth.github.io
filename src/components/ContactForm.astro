@@ -12,6 +12,7 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
     id="name"
     name="name"
     required
+    maxlength="200"
     data-validation-required-message="Please enter your name."
   />
   <input
@@ -20,16 +21,18 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
     id="email"
     name="email"
     required
+    maxlength="320"
     data-validation-required-message="Please enter your email address."
   />
-  <input type="tel" placeholder="Your phone number" id="phone" name="phone" />
-  <input type="url" placeholder="Your website" id="website" name="website" />
+  <input type="tel" placeholder="Your phone number" id="phone" name="phone" maxlength="100" />
+  <input type="url" placeholder="Your website" id="website" name="website" maxlength="500" />
   <textarea
     rows="5"
     placeholder="Dear Stefan..."
     id="message"
     name="message"
     required
+    maxlength="5000"
     data-validation-required-message="Please enter a message."></textarea>
   <div
     class="cf-turnstile"

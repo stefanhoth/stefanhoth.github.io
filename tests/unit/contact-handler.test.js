@@ -106,6 +106,57 @@ describe("onRequestPost", () => {
     expect(sendMailViaSmtp).not.toHaveBeenCalled();
   });
 
+  it("redirects to /?error=true when a field exceeds its maximum length", async () => {
+    mockTurnstileVerify(true);
+
+    const response = await onRequestPost({
+      request: buildRequest({ message: "x".repeat(5001) }),
+      env: buildEnv(),
+    });
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("https://example.com/?error=true");
+    expect(sendMailViaSmtp).not.toHaveBeenCalled();
+  });
+
+  it("redirects to /?error=true when the name exceeds its maximum length", async () => {
+    mockTurnstileVerify(true);
+
+    const response = await onRequestPost({
+      request: buildRequest({ name: "x".repeat(201) }),
+      env: buildEnv(),
+    });
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("https://example.com/?error=true");
+    expect(sendMailViaSmtp).not.toHaveBeenCalled();
+  });
+
+  it("redirects to /?error=true when the body is not form data", async () => {
+    mockTurnstileVerify(true);
+
+    const request = new Request("https://example.com/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Jane" }),
+    });
+    const response = await onRequestPost({ request, env: buildEnv() });
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("https://example.com/?error=true");
+    expect(sendMailViaSmtp).not.toHaveBeenCalled();
+  });
+
+  it("redirects to /?error=true when the Turnstile siteverify call throws (fails closed)", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("siteverify down")));
+
+    const response = await onRequestPost({ request: buildRequest(), env: buildEnv() });
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("https://example.com/?error=true");
+    expect(sendMailViaSmtp).not.toHaveBeenCalled();
+  });
+
   it("escapes the message in the HTML body and redirects to /?sent=true on success", async () => {
     mockTurnstileVerify(true);
     sendMailViaSmtp.mockResolvedValue(undefined);
