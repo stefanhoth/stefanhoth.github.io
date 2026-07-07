@@ -3,6 +3,9 @@
     "extends": [
         "config:recommended"
     ],
+    "ignorePaths": [
+        ".agents/**"
+    ],
     "rebaseWhen": "behind-base-branch",
     "lockFileMaintenance": {
         "enabled": true,
