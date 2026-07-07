@@ -19,22 +19,50 @@ function containsHeaderInjection(value) {
   return /[\r\n]/.test(value);
 }
 
+// Server-side size limits (the client-side maxlength attributes mirror these).
+const MAX_LENGTHS = {
+  name: 200,
+  email: 320,
+  phone: 100,
+  website: 500,
+  message: 5000,
+};
+
+function exceedsMaxLength(fields) {
+  return Object.entries(MAX_LENGTHS).some(
+    ([field, max]) => (fields[field]?.length ?? 0) > max,
+  );
+}
+
 export async function onRequestPost(context) {
   const { request, env } = context;
   const origin = new URL(request.url).origin;
-  const formData = await request.formData();
+
+  let formData;
+  try {
+    formData = await request.formData();
+  } catch {
+    // Not a form submission (wrong content type / malformed body).
+    return Response.redirect(`${origin}/?error=true`, 303);
+  }
 
   const token = formData.get("cf-turnstile-response");
-  const verifyResponse = await fetch(TURNSTILE_VERIFY_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      secret: env.TURNSTILE_SECRET_KEY,
-      response: token,
-      remoteip: request.headers.get("CF-Connecting-IP"),
-    }),
-  });
-  const { success: turnstileOk } = await verifyResponse.json();
+  let turnstileOk = false;
+  try {
+    const verifyResponse = await fetch(TURNSTILE_VERIFY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        secret: env.TURNSTILE_SECRET_KEY,
+        response: token,
+        remoteip: request.headers.get("CF-Connecting-IP"),
+      }),
+    });
+    ({ success: turnstileOk } = await verifyResponse.json());
+  } catch (err) {
+    // Treat a siteverify outage as verification failure (fail closed).
+    console.error("Turnstile verification failed", err);
+  }
 
   const name = formData.get("name")?.toString().trim();
   const email = formData.get("email")?.toString().trim();
@@ -48,7 +76,8 @@ export async function onRequestPost(context) {
     !email ||
     !message ||
     containsHeaderInjection(name) ||
-    containsHeaderInjection(email)
+    containsHeaderInjection(email) ||
+    exceedsMaxLength({ name, email, phone, website, message })
   ) {
     return Response.redirect(`${origin}/?error=true`, 303);
   }

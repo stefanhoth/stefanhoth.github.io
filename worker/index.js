@@ -1,34 +1,46 @@
 import { onRequestPost } from "../functions/contact.js";
 
+// Requests that match a static asset are served by Cloudflare's asset layer
+// without invoking this Worker — those get their headers from public/_headers.
+// Keep the two header sets in sync. This set covers Worker-handled responses
+// (POST /contact) and any request that falls through to the Worker.
 const SECURITY_HEADERS = {
   "X-Frame-Options": "DENY",
   "X-Content-Type-Options": "nosniff",
-  "X-XSS-Protection": "1; mode=block",
+  // "0" disables the legacy XSS auditor, which is deprecated and can itself
+  // be abused for cross-site leaks in older browsers. CSP is the real defense.
+  "X-XSS-Protection": "0",
   "Referrer-Policy": "strict-origin-when-cross-origin",
   "Permissions-Policy":
     "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()",
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+  // script-src has no 'unsafe-inline': Astro is configured (assetsInlineLimit: 0)
+  // to emit all scripts as external files. style-src keeps 'unsafe-inline' for
+  // Astro's inlined stylesheets and the Turnstile widget's style attributes.
   "Content-Security-Policy":
-    "default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-src https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+    "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src https://challenges.cloudflare.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
 };
+
+function withSecurityHeaders(response) {
+  const headers = new Headers(response.headers);
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+    headers.set(name, value);
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
     if (request.method === "POST" && url.pathname === "/contact") {
-      return onRequestPost({ request, env });
+      return withSecurityHeaders(await onRequestPost({ request, env }));
     }
 
-    const response = await env.ASSETS.fetch(request);
-    const headers = new Headers(response.headers);
-    for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
-      headers.set(name, value);
-    }
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers,
-    });
+    return withSecurityHeaders(await env.ASSETS.fetch(request));
   },
 };
