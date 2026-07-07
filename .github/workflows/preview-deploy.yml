@@ -11,6 +11,7 @@ concurrency:
 permissions:
   contents: read
   pull-requests: write
+  deployments: write
 
 jobs:
   preview:
@@ -33,15 +34,41 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: versions upload --preview-alias ${{ env.PR_ALIAS }}
-      - name: Comment preview URL on PR
+      - name: Register GitHub deployment
         uses: actions/github-script@v9
         env:
           PREVIEW_URL: https://pr-${{ github.event.number }}-stefanhoth-com.stefanhoth-de.workers.dev
         with:
           script: |
+            const previewUrl = process.env.PREVIEW_URL;
+            const headSha = context.payload.pull_request.head.sha;
+
+            const { data: deployment } = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: headSha,
+              environment: "preview",
+              auto_merge: false,
+              required_contexts: [],
+              transient_environment: true,
+              production_environment: false,
+              description: `Preview for PR #${context.issue.number}`,
+            });
+
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: deployment.id,
+              state: "success",
+              environment: "preview",
+              environment_url: previewUrl,
+              log_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              description: "Deployed to Cloudflare Workers",
+            });
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `Preview deployed: ${process.env.PREVIEW_URL}`,
+              body: `Preview deployed: ${previewUrl}`,
             });
