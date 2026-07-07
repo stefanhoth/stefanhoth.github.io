@@ -13,6 +13,12 @@ function escapeHtml(str) {
   );
 }
 
+// Values placed in email headers (Subject, Reply-To) must not contain CR/LF,
+// or a submitter could inject arbitrary extra SMTP/MIME header lines.
+function containsHeaderInjection(value) {
+  return /[\r\n]/.test(value);
+}
+
 export async function onRequestPost(context) {
   const { request, env } = context;
   const origin = new URL(request.url).origin;
@@ -36,7 +42,14 @@ export async function onRequestPost(context) {
   const website = formData.get("website")?.toString().trim();
   const message = formData.get("message")?.toString().trim();
 
-  if (!turnstileOk || !name || !email || !message) {
+  if (
+    !turnstileOk ||
+    !name ||
+    !email ||
+    !message ||
+    containsHeaderInjection(name) ||
+    containsHeaderInjection(email)
+  ) {
     return Response.redirect(`${origin}/?error=true`, 303);
   }
 
