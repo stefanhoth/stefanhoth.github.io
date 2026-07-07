@@ -15,7 +15,7 @@ If you want to look under the hood, here's what powers this site:
 - **UI Components**: Radix UI + shadcn/ui pattern
 - **Languages**: TypeScript, Astro components
 - **Linting & Formatting**: Biome 2.3.10
-- **Deployment**: Netlify (automatic deployments on main branch)
+- **Deployment**: Cloudflare Workers (wrangler)
 
 ## Development
 
@@ -33,13 +33,10 @@ npm run lint:fix     # Auto-fix linting issues
 
 ## Deployment
 
-This site is deployed on [Netlify](https://www.netlify.com) with automatic deployments from the main branch.
+This site runs on [Cloudflare Workers](https://workers.cloudflare.com). A Worker (`worker/index.js`, configured via `wrangler.jsonc`) serves the static Astro build, handles the contact form, and adds security headers (CSP, HSTS, X-Frame-Options, etc.). Cache and security headers for static assets live in `public/_headers`.
 
-The Netlify configuration (`netlify.toml`) includes:
-- Build settings optimized for Astro
-- Domain redirects to primary domain
-- Security headers (CSP, HSTS, X-Frame-Options, etc.)
-- Performance optimizations with cache headers
+- Production deploys: `npm run worker:deploy`
+- PR previews: deployed automatically by GitHub Actions (`.github/workflows/preview-deploy.yml`)
 
 ## Documentation
 
@@ -47,4 +44,4 @@ For detailed documentation about the codebase, architecture, and development gui
 
 ---
 
-Built with modern web technologies. Deployed via Netlify.
+Built with modern web technologies. Deployed via Cloudflare Workers.
