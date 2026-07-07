@@ -326,6 +326,38 @@ const {
         box-shadow: var(--shadow);
       }
 
+      .contact-status {
+        padding: 1rem 1.25rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        border: 1px solid transparent;
+      }
+
+      .contact-status--success {
+        background: #ecfdf5;
+        border-color: #10b981;
+        color: #065f46;
+      }
+
+      .contact-status--error {
+        background: #fef2f2;
+        border-color: #ef4444;
+        color: #991b1b;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .contact-status--success {
+          background: rgba(16, 185, 129, 0.15);
+          color: #6ee7b7;
+        }
+
+        .contact-status--error {
+          background: rgba(239, 68, 68, 0.15);
+          color: #fca5a5;
+        }
+      }
+
       input,
       textarea {
         width: 100%;
@@ -360,6 +392,17 @@ const {
 
       button:hover {
         background: #0b5ed7;
+      }
+
+      button:disabled {
+        background: var(--border);
+        color: var(--text);
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      button:disabled:hover {
+        background: var(--border);
       }
 
       .hidden {
