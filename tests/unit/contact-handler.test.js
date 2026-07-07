@@ -80,6 +80,32 @@ describe("onRequestPost", () => {
     expect(response.headers.get("location")).toBe("https://example.com/?error=true");
   });
 
+  it("redirects to /?error=true when name contains a CRLF (header injection attempt)", async () => {
+    mockTurnstileVerify(true);
+
+    const response = await onRequestPost({
+      request: buildRequest({ name: "Bob\r\nBcc: attacker@example.com" }),
+      env: buildEnv(),
+    });
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("https://example.com/?error=true");
+    expect(sendMailViaSmtp).not.toHaveBeenCalled();
+  });
+
+  it("redirects to /?error=true when email contains a CRLF (header injection attempt)", async () => {
+    mockTurnstileVerify(true);
+
+    const response = await onRequestPost({
+      request: buildRequest({ email: "jane@example.com\r\nBcc: attacker@example.com" }),
+      env: buildEnv(),
+    });
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("https://example.com/?error=true");
+    expect(sendMailViaSmtp).not.toHaveBeenCalled();
+  });
+
   it("escapes the message in the HTML body and redirects to /?sent=true on success", async () => {
     mockTurnstileVerify(true);
     sendMailViaSmtp.mockResolvedValue(undefined);
