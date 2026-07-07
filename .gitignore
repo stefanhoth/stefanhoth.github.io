@@ -16,3 +16,7 @@ dist/
 .env
 .env.local
 .env.production
+.dev.vars
+
+# Wrangler
+.wrangler/
