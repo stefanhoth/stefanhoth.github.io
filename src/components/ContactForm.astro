@@ -1,8 +1,10 @@
 ---
 // Contact form component — posts to the Cloudflare Pages Function at /contact
+const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
 ---
 
 <form name="contact" id="contact" method="POST" action="/contact">
+  <p id="contact-status" class="contact-status" role="status" aria-live="polite" hidden></p>
   <input
     type="text"
     class="form-control"
@@ -31,11 +33,29 @@
     data-validation-required-message="Please enter a message."></textarea>
   <div
     class="cf-turnstile"
-    data-sitekey={import.meta.env.PUBLIC_TURNSTILE_SITE_KEY}
+    data-sitekey={turnstileSiteKey}
     data-action="contact_form"
+    data-callback="onTurnstileSuccess"
+    data-error-callback="onTurnstileError"
+    data-expired-callback="onTurnstileExpired"
   >
   </div>
+  <noscript>
+    <p class="contact-status contact-status--error">
+      JavaScript is required for bot verification. Please enable JavaScript, or email me directly
+      instead.
+    </p>
+  </noscript>
   <button type="submit">Let's go!</button>
 </form>
 
 <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+<script>
+  import { initContactForm } from "../lib/contactForm.js";
+
+  initContactForm({
+    form: document.getElementById("contact"),
+    statusEl: document.getElementById("contact-status"),
+  });
+</script>

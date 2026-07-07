@@ -12,7 +12,10 @@
     "format": "biome format --write .",
     "lint:fix": "biome check --write --unsafe .",
     "worker:dev": "npm run build && wrangler dev",
-    "worker:deploy": "npm run build && wrangler deploy"
+    "worker:deploy": "npm run build && wrangler deploy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.0",
@@ -33,6 +36,9 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.10",
+    "@playwright/test": "^1.61.1",
+    "jsdom": "^29.1.1",
+    "vitest": "^4.1.10",
     "wrangler": "^4.107.0"
   }
 }

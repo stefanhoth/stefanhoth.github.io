@@ -50,6 +50,9 @@ npm run preview    # Preview production build
 npm run lint       # Run Biome linter
 npm run format     # Format code with Biome
 npm run lint:fix   # Auto-fix linting issues
+npm run test       # Run Vitest (unit + jsdom) tests
+npm run test:watch # Run Vitest in watch mode
+npm run test:e2e   # Run Playwright end-to-end tests (real browser)
 ```
 
 ## Key Features
