@@ -1,6 +1,10 @@
+import { sendMailViaSmtp } from "./smtp.js";
+
 const TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 const CONTACT_DESTINATION = "website-form@stefanhoth.de";
-const CONTACT_SENDER = "contact@stefanhoth.com";
+const CONTACT_SENDER = "website-form@stefanhoth.de";
+const SMTP_HOST = "smtp.mailbox.org";
+const SMTP_PORT = 465;
 
 function escapeHtml(str) {
   return str.replace(
@@ -46,9 +50,13 @@ export async function onRequestPost(context) {
   ].filter((line) => line !== null);
 
   try {
-    await env.EMAIL.send({
+    await sendMailViaSmtp({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      username: env.MAILSENDER_SMTP_USER,
+      password: env.MAILSENDER_SMTP_PASS,
       to: CONTACT_DESTINATION,
-      from: { email: CONTACT_SENDER, name: "stefanhoth.com contact form" },
+      from: `"stefanhoth.com contact form" <${CONTACT_SENDER}>`,
       replyTo: email,
       subject: `New contact form message from ${name}`,
       text: lines.join("\n"),

@@ -8,6 +8,5 @@
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS"
-  },
-  "send_email": [{ "name": "EMAIL", "remote": true }]
+  }
 }
