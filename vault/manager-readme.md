@@ -1,11 +1,11 @@
 ---
 title: Manager README
 publish: true
-permalink: manager-readme.md
 description: What you can expect from me as a manager.
 cssclasses:
   - website-page
 created: 2026-06-10
+permalink: manager-readme.md
 ---
 
 # Manager README
