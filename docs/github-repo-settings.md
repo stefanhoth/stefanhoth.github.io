@@ -42,8 +42,18 @@ Das Ruleset erzwingt für `main`:
 
 - **Pull Request Pflicht** — keine direkten Pushes auf `main` (0 Approvals
   nötig, du kannst deine eigenen PRs also sofort mergen)
-- **Required Status Checks** — die Jobs `Lint`, `Build`, `Test` und `E2E`
-  müssen grün sein
+- **Required Status Checks, strict** — die Jobs `Lint`, `Build`, `Test` und
+  `E2E against preview` müssen grün sein, und zwar gegen einen Branch, der auf
+  dem aktuellen `main`-Stand basiert (`strict_required_status_checks_policy`).
+  Ein PR, der hinter `main` zurückliegt, muss vor dem Merge aktualisiert
+  werden. (`E2E against preview` kommt aus `preview-deploy.yml` und testet
+  gegen das deployte PR-Preview. Lokal bleibt `npm run test:e2e` für die
+  Entwicklung verfügbar.)
+- **Required Deployment** — die `preview`-Environment (aus
+  `preview-deploy.yml`) muss erfolgreich deployt sein, bevor gemerged werden
+  kann
+- **Required Linear History** — keine Merge-Commits auf `main`; nur Squash
+  oder Rebase
 - **Kein Force-Push, kein Branch-Delete** auf `main`
 - **Bypass für Repository-Admins** — du selbst kannst im Notfall weiterhin
   direkt auf `main` pushen; Bots (Renovate, GitHub Actions) können das nicht.

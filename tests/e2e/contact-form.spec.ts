@@ -1,8 +1,17 @@
 import { expect, test } from "@playwright/test";
 
+// Set (e.g. by the preview-deploy workflow) to run against a deployed Worker
+// instead of the local preview server — see playwright.config.ts.
+const REMOTE = Boolean(process.env.E2E_BASE_URL);
+
 test("renders the form with a working Turnstile widget and enabled submit button", async ({
   page,
 }) => {
+  test.skip(
+    REMOTE,
+    "Deployed previews use the real sitekey, and the real Turnstile refuses to issue tokens to headless CI browsers — the remote variant below covers widget loading instead",
+  );
+
   await page.goto("/");
 
   // The test sitekey resolves invisibly (no iframe) but populates the hidden
@@ -10,6 +19,20 @@ test("renders the form with a working Turnstile widget and enabled submit button
   const tokenInput = page.locator('input[name="cf-turnstile-response"]');
   await expect(tokenInput).toHaveValue(/\S+/, { timeout: 10_000 });
   await expect(page.locator('#contact button[type="submit"]')).toBeEnabled();
+  await expect(page.locator("#contact-status")).toBeHidden();
+});
+
+test("renders the form and the real Turnstile widget loads without errors", async ({ page }) => {
+  test.skip(!REMOTE, "Remote-only variant: needs a deployed Worker with the real sitekey");
+
+  await page.goto("/");
+
+  // The hidden response input is injected by the Turnstile script when the
+  // widget renders — proof the script loaded and accepted the hostname. A
+  // widget error (e.g. hostname not allowed) would surface the status banner
+  // via the error callback instead.
+  const tokenInput = page.locator('input[name="cf-turnstile-response"]');
+  await expect(tokenInput).toBeAttached({ timeout: 10_000 });
   await expect(page.locator("#contact-status")).toBeHidden();
 });
 
