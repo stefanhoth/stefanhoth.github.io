@@ -46,21 +46,21 @@ jobs:
         run: echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"
 
       - name: Log in to Obsidian Sync
-        run: ob login --email "$OBSIDIAN_EMAIL" --password "$OBSIDIAN_PASSWORD"
         env:
           OBSIDIAN_EMAIL: ${{ secrets.OBSIDIAN_USER }}
           OBSIDIAN_PASSWORD: ${{ secrets.OBSIDIAN_PASS }}
+        run: ob login --email "$OBSIDIAN_EMAIL" --password "$OBSIDIAN_PASSWORD"
 
       - name: Link local vault directory to the remote vault
+        env:
+          OBSIDIAN_VAULT_NAME: ${{ secrets.OBSIDIAN_VAULT }}
+          OBSIDIAN_E2EE_PASSWORD: ${{ secrets.OBSIDIAN_E2EE }}
         run: |
           ARGS=(--vault "$OBSIDIAN_VAULT_NAME" --path ./vault --device-name github-action-website-publish)
           if [ -n "$OBSIDIAN_E2EE_PASSWORD" ]; then
             ARGS+=(--password "$OBSIDIAN_E2EE_PASSWORD")
           fi
           ob sync-setup "${ARGS[@]}"
-        env:
-          OBSIDIAN_VAULT_NAME: ${{ secrets.OBSIDIAN_VAULT }}
-          OBSIDIAN_E2EE_PASSWORD: ${{ secrets.OBSIDIAN_E2EE }}
 
       - name: Restrict sync to pull-only
         run: ob sync-config --path ./vault --mode pull-only
@@ -87,6 +87,8 @@ jobs:
 
       - name: Commit and push vault changes
         if: steps.changes.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -94,5 +96,3 @@ jobs:
           git add vault/
           git commit -m "chore(vault): sync from Obsidian"
           git push
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
