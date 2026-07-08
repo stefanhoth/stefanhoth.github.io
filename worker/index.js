@@ -33,12 +33,37 @@ function withSecurityHeaders(response) {
   });
 }
 
+// These vault pages are published as file-style `.md` URLs rather than the
+// folder-style `/<slug>/` URL Astro's static build produces. Requests for
+// the bare or trailing-slash form redirect to the `.md` URL; the `.md`
+// request itself is served by fetching the built page directly, so the
+// visible URL never gets a trailing slash.
+const README_SLUGS = ["employee-readme", "manager-readme"];
+
+async function serveReadmeAlias(url, request, env) {
+  for (const slug of README_SLUGS) {
+    if (url.pathname === `/${slug}.md`) {
+      const assetRequest = new Request(new URL(`/${slug}/`, url), request);
+      return await env.ASSETS.fetch(assetRequest);
+    }
+    if (url.pathname === `/${slug}` || url.pathname === `/${slug}/`) {
+      return Response.redirect(new URL(`/${slug}.md`, url), 301);
+    }
+  }
+  return null;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
     if (request.method === "POST" && url.pathname === "/contact") {
       return withSecurityHeaders(await onRequestPost({ request, env }));
+    }
+
+    const readmeResponse = await serveReadmeAlias(url, request, env);
+    if (readmeResponse) {
+      return withSecurityHeaders(readmeResponse);
     }
 
     return withSecurityHeaders(await env.ASSETS.fetch(request));
