@@ -57,6 +57,9 @@ jobs:
 
   e2e:
     name: E2E
+    # On pull requests the suite runs against the deployed preview instead
+    # (see preview-deploy.yml) — this local-server run only covers main.
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     # Runs inside the official Playwright image (Chromium preinstalled) so CI
     # doesn't download/install a browser on every run.

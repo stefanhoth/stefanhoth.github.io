@@ -90,3 +90,52 @@ jobs:
               log_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
               description: "Deployed to Cloudflare Workers",
             });
+
+  e2e:
+    name: E2E against preview
+    needs: preview
+    runs-on: ubuntu-latest
+    # No secrets needed here — keep the job on read-only permissions since
+    # npm ci runs third-party lifecycle scripts.
+    permissions:
+      contents: read
+    env:
+      E2E_BASE_URL: https://pr-${{ github.event.number }}-stefanhoth-com.stefanhoth-de.workers.dev
+    # Image tag must match @playwright/test's version in package.json.
+    container:
+      image: mcr.microsoft.com/playwright:v1.61.1-noble
+      options: --ipc=host
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Cache npm dependencies
+        uses: actions/cache@v6
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node-
+      - run: npm ci
+      - name: Wait for preview to be reachable
+        # A brand-new PR alias needs a fresh workers.dev subdomain, which can
+        # take a moment to provision after the version upload.
+        run: |
+          for i in $(seq 1 18); do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "$E2E_BASE_URL/") || status=000
+            if [ "$status" = "200" ]; then
+              echo "Preview reachable after $i attempt(s)"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $status - retrying in 5s"
+            sleep 5
+          done
+          echo "Preview at $E2E_BASE_URL never became reachable" >&2
+          exit 1
+      - run: npm run test:e2e
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
