@@ -103,7 +103,7 @@ The site runs on Cloudflare Workers. A single Worker (`worker/index.js`, configu
 - `public/_headers` caches `/_astro/*` for 1 year with the immutable directive
 
 **Deploys**:
-- Production: `npm run worker:deploy` (builds, then `wrangler deploy`)
+- Production: automatic — the Cloudflare GitHub App ("Cloudflare Workers and Pages", installed on this repo) builds and deploys `stefanhoth-com` to production on every push to `main`, reported as a `Workers Builds: stefanhoth-com` check run. This is Cloudflare's native git integration (configured in the Cloudflare dashboard, not a file in this repo) — it is separate from and runs in addition to `ci.yml`. `npm run worker:deploy` still works for a manual/local deploy (e.g. to push a change without going through `main`), but isn't the normal path.
 - PR previews: `.github/workflows/preview-deploy.yml` builds the site and uploads a preview version via `cloudflare/wrangler-action` with a `pr-<number>` alias, then registers a GitHub deployment and comments the preview URL (`https://pr-<number>-stefanhoth-com.stefanhoth-de.workers.dev`) on the PR
 - CI (`.github/workflows/ci.yml`) runs lint, build, unit tests, and Playwright e2e on every PR and push to main
 - Local Worker testing: `npm run worker:dev` (secrets from `.dev.vars`)
