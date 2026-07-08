@@ -1,13 +1,12 @@
 ---
 title: Employee README
 publish: true
-permalink: employee-readme.md
 description: What you can expect from Stefan Hoth as a direct report or colleague.
 cssclasses:
   - website-page
 created: 2026-06-10
+permalink: employee-readme.md
 ---
-
 # Employee README
 
 The [[manager-readme]] explains how I work as a manager. This one goes the other direction: what you can expect from me as a direct report.
