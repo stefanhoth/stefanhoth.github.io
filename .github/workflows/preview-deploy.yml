@@ -10,7 +10,6 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: write
   deployments: write
 
 jobs:
@@ -66,11 +65,4 @@ jobs:
               environment_url: previewUrl,
               log_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
               description: "Deployed to Cloudflare Workers",
-            });
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `Preview deployed: ${previewUrl}`,
             });
