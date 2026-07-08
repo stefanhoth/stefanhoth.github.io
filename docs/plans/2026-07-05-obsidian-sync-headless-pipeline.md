@@ -74,6 +74,7 @@ vault/.obsidian/
 - Trigger: `schedule` (alle 30 Minuten) + `workflow_dispatch` + `repository_dispatch` (Typ `sync-vault`) — Letzteres erlaubt einen On-Demand-Trigger von außen per Webhook: `POST /repos/stefanhoth/stefanhoth.com/dispatches` mit `{"event_type": "sync-vault"}`, authentifiziert mit einem PAT (classic: Scope `repo`; fine-grained: Permission `Contents: write`). Der eingebaute `GITHUB_TOKEN` kann diesen Endpunkt nicht selbst aufrufen — dafür ist ein separates, von Stefan verwaltetes PAT nötig, das nicht Teil dieses Workflows ist.
 - Schritte: `npm ci` → Login → Vault verknüpfen (idempotent, da Runner jedes Mal frisch startet) → Pull-only-Modus setzen → Sync → **`npm run build` als Validierungs-Gate** → Commit & Push, nur wenn der Build durchläuft
 - **Kein `[skip ci]`**: Ein direkter Push mit dem Standard-`GITHUB_TOKEN` löst laut GitHub ohnehin keine Folge-Workflows aus (Rekursionsschutz) — `ci.yml` würde auf diesem Commit gar nicht laufen. Deshalb läuft die Build-Validierung (das eigentliche Sicherheitsnetz für kaputte Frontmatter aus `docs/plans/2026-07-05-obsidian-cms-vault-struktur.md`) **innerhalb** des Sync-Jobs selbst, vor dem Commit — schlägt der Build fehl, wird nichts committet und der Job schlägt sichtbar fehl.
+- **Deploy wird trotzdem getriggert**: Der `GITHUB_TOKEN`-Rekursionsschutz betrifft nur GitHub-Actions-Workflows im selben Repo. Cloudflares GitHub-App bekommt den Push-Webhook auch bei Bot-Pushes zugestellt ([bestätigt in GitHubs Community-Diskussion #25702](https://github.com/orgs/community/discussions/25702)) und deployt den Sync-Commit ganz normal — Content-Update und Deployment sind also **nicht** voneinander getrennt.
 - Credentials aus Repository Secrets (werden nicht im Code gespeichert)
 - `permissions: contents: write`, sonst nichts
 - `checkout` mit `persist-credentials: false`: `npm ci` führt Postinstall-Skripte Dritter aus (u. a. für `better-sqlite3`, eine native Abhängigkeit von `obsidian-headless`); der schreibende `GITHUB_TOKEN` wird erst im letzten Schritt (Commit & Push) explizit in die Remote-URL eingesetzt, damit er während `npm ci` und den Obsidian-CLI-Schritten nicht im Git-Credential-Store liegt
@@ -89,7 +90,9 @@ vault/.obsidian/
    ```
 2. GitHub Repository Secrets angelegt: `OBSIDIAN_USER`, `OBSIDIAN_PASS`, `OBSIDIAN_VAULT`
 3. Optional: `OBSIDIAN_E2EE`, falls der Vault Ende-zu-Ende-verschlüsselt ist
-4. Ersten Lauf manuell über `workflow_dispatch` anstoßen und Ergebnis prüfen, bevor man sich auf den 30-Minuten-Zeitplan verlässt
+4. Ersten Lauf manuell über `workflow_dispatch` anstoßen und Ergebnis prüfen, bevor man sich auf den 30-Minuten-Zeitplan verlässt. Dabei auch verifizieren:
+   - dass der Sync-Commit auf `main` einen `Workers Builds: stefanhoth-com`-Check-Run auslöst (= Deploy läuft)
+   - dass im Cloudflare-Dashboard (**Settings → Builds**) keine [Build Watch Paths](https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/) konfiguriert sind, die `vault/` ausschließen — sonst würde Cloudflare den Build für reine Vault-Commits überspringen und Content-Update und Deployment wären doch getrennt
 
 ---
 
