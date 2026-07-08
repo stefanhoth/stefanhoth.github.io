@@ -40,6 +40,10 @@ jobs:
     name: Deploy preview
     needs: build
     runs-on: ubuntu-latest
+    env:
+      PR_ALIAS: pr-${{ github.event.number }}
+    outputs:
+      preview-url: ${{ steps.meta.outputs.preview-url }}
     steps:
       # Checkout provides wrangler.jsonc, worker/, and functions/ only —
       # no npm install runs in this job.
@@ -50,11 +54,12 @@ jobs:
         with:
           name: dist
           path: dist/
+      - name: Compute preview URL
+        id: meta
+        run: echo "preview-url=https://${PR_ALIAS}-stefanhoth-com.stefanhoth-de.workers.dev" >> "$GITHUB_OUTPUT"
       - name: Upload preview version
         id: deploy
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
-        env:
-          PR_ALIAS: pr-${{ github.event.number }}
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -62,7 +67,7 @@ jobs:
       - name: Register GitHub deployment
         uses: actions/github-script@v9
         env:
-          PREVIEW_URL: https://pr-${{ github.event.number }}-stefanhoth-com.stefanhoth-de.workers.dev
+          PREVIEW_URL: ${{ steps.meta.outputs.preview-url }}
         with:
           script: |
             const previewUrl = process.env.PREVIEW_URL;
@@ -100,7 +105,7 @@ jobs:
     permissions:
       contents: read
     env:
-      E2E_BASE_URL: https://pr-${{ github.event.number }}-stefanhoth-com.stefanhoth-de.workers.dev
+      E2E_BASE_URL: ${{ needs.preview.outputs.preview-url }}
     # Image tag must match @playwright/test's version in package.json.
     container:
       image: mcr.microsoft.com/playwright:v1.61.1-noble
