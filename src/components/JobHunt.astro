@@ -1,8 +1,14 @@
 ---
-// Job hunt banner component
+interface Props {
+  text: string;
+}
+
+const { text } = Astro.props;
+// jobhunt is a flat frontmatter string (not markdown body), so Astro won't
+// render it — a single **bold** marker is all Obsidian's editor needs, so
+// we translate just that instead of pulling in a full markdown parser.
+const html = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
 ---
 
-<div class="job-hunt">
-  <strong>Open to new roles:</strong> Director or Head of Engineering, remote-first. Ideally with a founder or CTO building out their first engineering leadership layer, or a scale-up that needs structure brought into an established team.
-</div>
+<div class="job-hunt" set:html={html} />
 
