@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is Stefan Hoth's personal website built with Astro, showcasing professional profile, experience, and contact information. The site is deployed as a static GitHub Pages site.
+This is Stefan Hoth's personal website built with Astro, showcasing professional profile, experience, and contact information. The site is built as static assets and served by a Cloudflare Worker.
 
 ## Tech Stack
 
@@ -11,13 +11,18 @@ This is Stefan Hoth's personal website built with Astro, showcasing professional
 - **UI Components**: Radix UI + shadcn/ui pattern
 - **Languages**: TypeScript, Astro components
 - **Linting/Formatting**: Biome 2.3.10
-- **Deployment**: Netlify
+- **Deployment**: Cloudflare Workers (wrangler)
 
 ## Project Structure
 
 ```
 /
-├── public/              # Static assets
+├── public/              # Static assets (incl. _headers for Cloudflare)
+├── worker/
+│   └── index.js         # Cloudflare Worker entry (serves assets, routes /contact)
+├── functions/
+│   ├── contact.js       # Contact form handler (Turnstile + SMTP)
+│   └── smtp.js          # Minimal SMTP client
 ├── src/
 │   ├── components/      # Astro components
 │   │   ├── About.astro
@@ -36,6 +41,7 @@ This is Stefan Hoth's personal website built with Astro, showcasing professional
 │   └── lib/
 │       └── utils.ts     # Utility functions
 ├── astro.config.mjs     # Astro configuration
+├── wrangler.jsonc       # Cloudflare Workers configuration
 ├── biome.json          # Biome linter/formatter config
 ├── components.json     # shadcn/ui components config
 └── tsconfig.json       # TypeScript configuration
@@ -53,6 +59,8 @@ npm run lint:fix   # Auto-fix linting issues
 npm run test       # Run Vitest (unit + jsdom) tests
 npm run test:watch # Run Vitest in watch mode
 npm run test:e2e   # Run Playwright end-to-end tests (real browser)
+npm run worker:dev    # Build, then run the Worker locally with wrangler dev
+npm run worker:deploy # Build, then deploy the Worker to Cloudflare
 ```
 
 ## Key Features
@@ -62,7 +70,7 @@ npm run test:e2e   # Run Playwright end-to-end tests (real browser)
 3. **About Section**: Detailed background and expertise
 4. **Quote Section**: Featured quote or motto
 5. **Links Section**: Social media and professional links
-6. **Contact Form**: Netlify Forms integration for contact
+6. **Contact Form**: POSTs to `/contact`, handled by the Cloudflare Worker (Turnstile bot check + email via SMTP)
 
 ## Design Patterns
 
@@ -76,40 +84,29 @@ npm run test:e2e   # Run Playwright end-to-end tests (real browser)
 
 - Node version managed via `.nvmrc` (currently v24)
 - Renovate bot enabled for dependency updates
-- Contact form configured for Netlify Forms (name must match form ID)
+- Worker secrets (`TURNSTILE_SECRET_KEY`, `MAILSENDER_SMTP_USER`, `MAILSENDER_SMTP_PASS`) are set via `wrangler secret`; local values go in `.dev.vars` (see `.dev.vars.example`)
+- `PUBLIC_TURNSTILE_SITE_KEY` is a build-time env var for the frontend Turnstile widget (see `.env.example`)
 
 ## Deployment
 
-The site is deployed via Netlify with automatic deployments triggered when changes are pushed to the main branch. The repository is hosted on GitHub at `stefanhoth.github.io`.
+The site runs on Cloudflare Workers. A single Worker (`worker/index.js`, configured via `wrangler.jsonc`) serves the static Astro build from `dist/` through the `ASSETS` binding, handles `POST /contact`, and stamps security headers on every asset response. It is bound to the custom domain `stefanhoth.com`.
 
-### Netlify Configuration
+**Configuration** (`wrangler.jsonc`):
+- Worker name: `stefanhoth-com`, entry point `worker/index.js`
+- Static assets served from `dist/` (Astro build output)
+- Route: `stefanhoth.com` as a custom domain
+- Observability logs enabled
 
-The site uses a `netlify.toml` file for comprehensive configuration:
+**Headers**:
+- Security headers (X-Frame-Options, X-Content-Type-Options, HSTS, CSP, Referrer-Policy, Permissions-Policy) are defined in two places that must be kept in sync: `public/_headers` (applied by the assets platform) and the `SECURITY_HEADERS` object in `worker/index.js`
+- The CSP allows `https://challenges.cloudflare.com` (script + frame) for the Turnstile widget
+- `public/_headers` caches `/_astro/*` for 1 year with the immutable directive
 
-**Build Settings**:
-- Build command: `npm run build`
-- Publish directory: `dist` (Astro output)
-- Node.js version: 24
-
-**Redirects**:
-- All domain aliases (stefan-hoth.de, www.stefanhoth.com, etc.) redirect to the primary domain stefanhoth.com with 301 status
-- Legacy Netlify subdomain redirects to primary domain
-
-**Security Headers**:
-- X-Frame-Options: Prevents clickjacking attacks
-- X-Content-Type-Options: Prevents MIME type sniffing
-- Strict-Transport-Security (HSTS): Enforces HTTPS for 1 year
-- Content-Security-Policy: Restricts resource loading for enhanced security
-- Referrer-Policy: Controls referrer information sharing
-- Permissions-Policy: Restricts access to browser features
-
-**Performance Optimization**:
-- Static assets (/assets/*, CSS, JS) cached for 1 year with immutable directive
-
-**Context-Specific Settings**:
-- Production: NODE_ENV=production
-- Deploy previews: NODE_ENV=preview
-- Branch deploys: NODE_ENV=development
+**Deploys**:
+- Production: `npm run worker:deploy` (builds, then `wrangler deploy`)
+- PR previews: `.github/workflows/preview-deploy.yml` builds the site and uploads a preview version via `cloudflare/wrangler-action` with a `pr-<number>` alias, then registers a GitHub deployment and comments the preview URL (`https://pr-<number>-stefanhoth-com.stefanhoth-de.workers.dev`) on the PR
+- CI (`.github/workflows/ci.yml`) runs lint, build, unit tests, and Playwright e2e on every PR and push to main
+- Local Worker testing: `npm run worker:dev` (secrets from `.dev.vars`)
 
 ## Working with This Codebase
 
@@ -127,13 +124,17 @@ The site uses a `netlify.toml` file for comprehensive configuration:
 
 ### Contact Form
 
-The contact form uses Netlify Forms. Ensure:
-- Form name attribute matches the form ID
-- Form is properly configured in Netlify dashboard
-- Hidden input field includes form-name for JS-rendered forms
+The contact form POSTs to `/contact`, which the Worker routes to `onRequestPost` in `functions/contact.js`. The handler:
+1. Verifies the Cloudflare Turnstile token (`cf-turnstile-response`) against the siteverify API using `TURNSTILE_SECRET_KEY`
+2. Validates required fields (name, email, message) and rejects CR/LF in name/email to prevent SMTP header injection
+3. Sends the email via SMTP through mailbox.org (`smtp.mailbox.org:465`, credentials in `MAILSENDER_SMTP_USER`/`MAILSENDER_SMTP_PASS`) using the minimal client in `functions/smtp.js`
+4. Redirects back to `/?sent=true` on success or `/?error=true` on failure
+
+The frontend widget needs `PUBLIC_TURNSTILE_SITE_KEY` at build time.
 
 ## Recent Changes
 
+- Migrated hosting from Netlify to Cloudflare Workers (PR #44)
+- Contact form now handled by the Worker: Turnstile verification + email via mailbox.org SMTP
 - Updated to Node.js v24
 - Activated Renovate bot for automated dependency updates
-- Fixed contact form configuration for Netlify Forms compatibility
