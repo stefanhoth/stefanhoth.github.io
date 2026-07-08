@@ -129,6 +129,7 @@ Pages come from `vault/`, which `.github/workflows/sync-vault.yml` pulls from Ob
 Frontmatter controls publishing:
 - `publish: true` (plus `title`) — required for a page to be built
 - `permalink: <slug>` or `permalink: <slug>.md` — optional override of the filename-derived slug. With the `.md` suffix the page is published as a file-style URL (`/<slug>.md`); the bare and trailing-slash forms 301-redirect to it. The build writes those slugs to `dist/_file-style-pages.json` (integration in `astro.config.mjs`); the Worker reads that manifest at runtime, with `run_worker_first` in `wrangler.jsonc` routing page requests through it. Wikilinks resolve to the target's permalink.
+- `template: sidebar` — optional page template (default: `default`). Renders the content with a table-of-contents sidebar linking every h2 as a smooth-scroll anchor. The h2s are extracted at build time by Astro's markdown pipeline (`render()` returns `headings`; `rehypeHeadingIds` stamps the matching `id`s on the headings); `src/pages/[slug].astro` picks the layout, `src/components/TocSidebar.astro` renders the nav. On desktop the sidebar sits sticky right of the content, on mobile above it. Pages without any h2s fall back to the plain template.
 
 ### Contact Form
 
