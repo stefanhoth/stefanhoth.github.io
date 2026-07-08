@@ -122,6 +122,14 @@ The site runs on Cloudflare Workers. A single Worker (`worker/index.js`, configu
 - Global styles in `src/styles/global.css`
 - Custom utilities via Tailwind configuration
 
+### Vault Publishing
+
+Pages come from `vault/`, which `.github/workflows/sync-vault.yml` pulls from Obsidian Sync as an exact mirror (the directory is emptied before each pull, so files deleted or renamed in Obsidian are deleted here too). Because of that, vault content — including frontmatter — must be edited in Obsidian, not in the repo; repo-side edits are overwritten by the next sync.
+
+Frontmatter controls publishing:
+- `publish: true` (plus `title`) — required for a page to be built
+- `permalink: <slug>` or `permalink: <slug>.md` — optional override of the filename-derived slug. With the `.md` suffix the page is published as a file-style URL (`/<slug>.md`); the bare and trailing-slash forms 301-redirect to it. The build writes those slugs to `dist/_file-style-pages.json` (integration in `astro.config.mjs`); the Worker reads that manifest at runtime, with `run_worker_first` in `wrangler.jsonc` routing page requests through it. Wikilinks resolve to the target's permalink.
+
 ### Contact Form
 
 The contact form POSTs to `/contact`, which the Worker routes to `onRequestPost` in `functions/contact.js`. The handler:
