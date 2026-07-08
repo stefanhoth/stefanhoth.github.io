@@ -132,6 +132,11 @@ The contact form POSTs to `/contact`, which the Worker routes to `onRequestPost`
 
 The frontend widget needs `PUBLIC_TURNSTILE_SITE_KEY` at build time.
 
+## Git Workflow
+
+- Commit incrementally per logical step, not one bundled commit at the end.
+- Once a chunk of work is done and verified (build/tests pass), push the branch and open a PR automatically — no need to ask each time. This does not extend to merging a PR or force-pushing; those still require explicit confirmation.
+
 ## Recent Changes
 
 - Migrated hosting from Netlify to Cloudflare Workers (PR #44)
