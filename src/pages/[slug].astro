@@ -1,5 +1,6 @@
 ---
 import { getCollection, render } from "astro:content";
+import TocSidebar from "@/components/TocSidebar.astro";
 import Layout from "@/layouts/Layout.astro";
 
 export async function getStaticPaths() {
@@ -14,11 +15,77 @@ export async function getStaticPaths() {
 }
 
 const { page } = Astro.props;
-const { Content } = await render(page);
+const { Content, headings } = await render(page);
+
+// `template: sidebar` (frontmatter) renders the content with a sidebar
+// linking to every h2. The headings come out of the markdown build, so a
+// page without any h2s falls back to the plain template.
+const useSidebar =
+  page.data.template === "sidebar" &&
+  headings.some((heading) => heading.depth === 2);
 ---
 
-<Layout title={page.data.title} description={page.data.description}>
-  <article class="prose">
-    <Content />
-  </article>
+<Layout
+  title={page.data.title}
+  description={page.data.description}
+  bodyClass={useSidebar ? "toc-page" : undefined}
+>
+  {
+    useSidebar ? (
+      <div class="toc-layout">
+        <aside class="toc-col">
+          <TocSidebar headings={headings} />
+        </aside>
+        <article class="prose">
+          <Content />
+        </article>
+      </div>
+    ) : (
+      <article class="prose">
+        <Content />
+      </article>
+    )
+  }
 </Layout>
+
+<style>
+  .toc-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+  }
+
+  @media (min-width: 900px) {
+    .toc-layout {
+      grid-template-columns: minmax(0, 600px) 220px;
+      gap: 2.5rem;
+    }
+
+    /* Content left, sidebar right; it stays in view while scrolling. */
+    .toc-col {
+      order: 2;
+      position: sticky;
+      top: 2rem;
+    }
+  }
+</style>
+
+<style is:global>
+  /* Layout.astro caps the body at 600px for the single-column pages;
+     the sidebar template needs room for the extra column. */
+  body.toc-page {
+    max-width: 900px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  /* Breathing room above a heading after jumping to its anchor. */
+  article.prose :is(h2, h3, h4) {
+    scroll-margin-top: 1.5rem;
+  }
+</style>

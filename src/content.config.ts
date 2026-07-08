@@ -28,6 +28,10 @@ const pages = defineCollection({
           "permalink muss ein kebab-case Slug sein, optional mit .md-Endung",
         )
         .optional(),
+      // Page template. "sidebar" renders the content with a table-of-contents
+      // sidebar linking to every h2 (extracted at build time by Astro's
+      // markdown pipeline, see src/pages/[slug].astro).
+      template: z.enum(["default", "sidebar"]).default("default"),
     })
     .superRefine((data, ctx) => {
       if (data.publish && !data.title) {
