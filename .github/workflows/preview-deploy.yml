@@ -136,7 +136,50 @@ jobs:
           done
           echo "Preview at $E2E_BASE_URL never became reachable" >&2
           exit 1
-      - run: npm run test:e2e
+      - name: Run e2e tests
+        run: npm run test:e2e -- --reporter=list,json
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/results.json
+      - name: Write test summary
+        if: always()
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        with:
+          script: |
+            const fs = require("fs");
+            const reportPath = "playwright-report/results.json";
+
+            if (!fs.existsSync(reportPath)) {
+              await core.summary
+                .addHeading("E2E against preview")
+                .addRaw("No results.json found — the suite likely crashed before any test ran.")
+                .write();
+              return;
+            }
+
+            const { stats = {} } = JSON.parse(fs.readFileSync(reportPath, "utf8"));
+            const { expected = 0, unexpected = 0, flaky = 0, skipped = 0, duration = 0 } = stats;
+            const ok = unexpected === 0;
+
+            await core.summary
+              .addHeading(`E2E against preview ${ok ? "✅" : "❌"}`)
+              .addRaw(`Tested against ${process.env.E2E_BASE_URL}`)
+              .addTable([
+                [
+                  { data: "Passed", header: true },
+                  { data: "Failed", header: true },
+                  { data: "Flaky", header: true },
+                  { data: "Skipped", header: true },
+                  { data: "Duration", header: true },
+                ],
+                [
+                  String(expected),
+                  String(unexpected),
+                  String(flaky),
+                  String(skipped),
+                  `${(duration / 1000).toFixed(1)}s`,
+                ],
+              ])
+              .write();
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
