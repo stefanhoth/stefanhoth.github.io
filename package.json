@@ -15,7 +15,9 @@
     "worker:deploy": "npm run build && wrangler deploy",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "sync:vault": "ob sync --path vault/",
+    "sync:vault:setup": "ob sync-setup --path vault/"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.0",
@@ -40,6 +42,7 @@
     "@playwright/test": "^1.61.1",
     "@tailwindcss/typography": "^0.5.20",
     "jsdom": "^29.1.1",
+    "obsidian-headless": "^0.0.12",
     "remark-wiki-link": "^2.0.1",
     "vitest": "^4.1.10",
     "wrangler": "^4.107.0"

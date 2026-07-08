@@ -21,6 +21,9 @@ dist/
 # Wrangler
 .wrangler/
 
+# Obsidian Sync local state (github.com/obsidianmd/obsidian-headless)
+vault/.obsidian/
+
 # Test artifacts
 test-results/
 playwright-report/
