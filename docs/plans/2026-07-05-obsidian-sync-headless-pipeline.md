@@ -2,7 +2,7 @@
 
 **Datum:** 2026-07-05
 **Aktualisiert:** 2026-07-08 — Netlify-Annahmen durch den tatsächlichen Cloudflare-Workers-Flow ersetzt, CLI-Kommandos gegen die offizielle `obsidian-headless`-Doku verifiziert. Korrigiert: entgegen einer ersten (falschen) Version dieses Dokuments deployt Cloudflare bei Push auf `main` automatisch in Produktion, über die Cloudflare-GitHub-App ("Cloudflare Workers and Pages", Dashboard-Integration, kein Workflow in diesem Repo) — sichtbar als Check-Run `Workers Builds: stefanhoth-com`. Ein Vault-Sync, der auf `main` landet, geht damit **automatisch live**, sobald Cloudflares eigener Build erfolgreich ist.
-**Zweite Korrektur (nach dem ersten echten Lauf):** Direkter Push auf `main` wird von einer aktiven Repository-Ruleset ("Protect main") abgelehnt — PR Pflicht, 4 grüne Status-Checks (Lint/Build/Test/E2E gegen Preview) und ein erfolgreiches `preview`-Deployment sind Voraussetzung fürs Mergen (0 Approvals nötig). Der Workflow committet daher auf einen festen Branch `sync/vault`, öffnet/aktualisiert dort einen PR und aktiviert Auto-Merge, statt direkt auf `main` zu pushen.
+**Zweite Korrektur (nach dem ersten echten Lauf):** Direkter Push auf `main` wird von einer aktiven Repository-Ruleset ("Protect main") abgelehnt — PR Pflicht, 4 grüne Status-Checks (Lint/Build/Test/E2E gegen Preview) und ein erfolgreiches `preview`-Deployment sind Voraussetzung fürs Mergen (0 Approvals nötig). Der Workflow committet daher auf einen festen Branch `chore/sync-vault`, öffnet/aktualisiert dort einen PR und aktiviert Auto-Merge, statt direkt auf `main` zu pushen.
 **Status:** Umgesetzt (Workflow `sync-vault.yml`) — Repository-Secrets angelegt (`OBSIDIAN_USER`/`PASS`/`VAULT`/`E2EE`, `GH_COMMIT_PAT`).
 
 ---
@@ -18,8 +18,8 @@ Obsidian App (any device)
         ↓  bearbeiten
 Obsidian Sync (Cloud)
         ↓  ob sync (GitHub Actions, alle 30 Min + manuell + Webhook)
-Branch sync/vault  (force-gepusht, nur wenn npm run build durchläuft)
-        ↓  PR main ← sync/vault (per PAT geöffnet, damit Checks überhaupt laufen)
+Branch chore/sync-vault  (force-gepusht, nur wenn npm run build durchläuft)
+        ↓  PR main ← chore/sync-vault (per PAT geöffnet, damit Checks überhaupt laufen)
 ci.yml (Lint/Build/Test) + preview-deploy.yml (Preview-Deployment + E2E)
         ↓  alle 4 Checks grün + erfolgreiches preview-Deployment
 Auto-Merge (squash) → main
@@ -86,12 +86,12 @@ vault/.obsidian/
 `.github/workflows/sync-vault.yml`
 
 - Trigger: `schedule` (alle 30 Minuten) + `workflow_dispatch` + `repository_dispatch` (Typ `sync-vault`) — Letzteres erlaubt einen On-Demand-Trigger von außen per Webhook: `POST /repos/stefanhoth/stefanhoth.com/dispatches` mit `{"event_type": "sync-vault"}`, authentifiziert mit einem PAT (classic: Scope `repo`; fine-grained: Permission `Contents: write`). Der eingebaute `GITHUB_TOKEN` kann diesen Endpunkt nicht selbst aufrufen.
-- Schritte: `npm ci` → Login → Vault verknüpfen (idempotent, da Runner jedes Mal frisch startet) → Pull-only-Modus setzen → Sync → **`npm run build` als erste Validierung** → nur bei Änderungen: Branch `sync/vault` von aktuellem `main` neu aufbauen, force-pushen, PR öffnen (falls noch keiner offen ist) und Auto-Merge (Squash) aktivieren
-- Branch-Strategie: fester, wiederverwendeter Branch `sync/vault` statt ein Branch pro Lauf — jeder Lauf baut ihn frisch von `main` aus neu auf (`git checkout -B` + `--force`-Push). Dadurch bleibt ein offener PR immer der vollständige, aktuelle Vault-Stand, auch wenn mehrere 30-Minuten-Zyklen vergehen, bevor die Checks durchlaufen. Nach dem Merge löscht GitHub den Branch automatisch (`deleteBranchOnMerge` ist an), der nächste Lauf legt ihn neu an.
+- Schritte: `npm ci` → Login → Vault verknüpfen (idempotent, da Runner jedes Mal frisch startet) → Pull-only-Modus setzen → Sync → **`npm run build` als erste Validierung** → nur bei Änderungen: Branch `chore/sync-vault` von aktuellem `main` neu aufbauen, force-pushen, PR öffnen (falls noch keiner offen ist) und Auto-Merge (Squash) aktivieren
+- Branch-Strategie: fester, wiederverwendeter Branch `chore/sync-vault` statt ein Branch pro Lauf — jeder Lauf baut ihn frisch von `main` aus neu auf (`git switch -c` + `--force`-Push). Dadurch bleibt ein offener PR immer der vollständige, aktuelle Vault-Stand, auch wenn mehrere 30-Minuten-Zyklen vergehen, bevor die Checks durchlaufen. Nach dem Merge löscht GitHub den Branch automatisch (`deleteBranchOnMerge` ist an), der nächste Lauf legt ihn neu an.
 - Push und PR-Erstellung laufen über `secrets.GH_COMMIT_PAT`, nicht über `GITHUB_TOKEN` — siehe Begründung oben (sonst laufen `ci.yml`/`preview-deploy.yml` gar nicht an, und ein Push auf `main` würde ohnehin an der Ruleset scheitern).
 - `permissions: contents: read` — der Job schreibt nichts mit dem Default-Token, alles Schreibende läuft über das PAT.
 - `checkout` mit `persist-credentials: false`: reines Vorsichtsprinzip, da `npm ci` Postinstall-Skripte Dritter ausführt (u. a. für `better-sqlite3`, eine native Abhängigkeit von `obsidian-headless`).
-- `gh pr list --head sync/vault --state open --json number --jq '.[0].number // empty'` statt `--jq '.[0].number' | grep -q .` — bei leerem Ergebnis-Array liefert `.[0].number` sonst den String `"null"` zurück, der `grep -q .` fälschlich als "PR existiert schon" durchgehen lässt (beim allerersten Lauf würde nie ein PR angelegt). Mit `// empty` bleibt die Variable bei keinem Treffer tatsächlich leer.
+- `gh pr list --head chore/sync-vault --state open --json number --jq '.[0].number // empty'` statt `--jq '.[0].number' | grep -q .` — bei leerem Ergebnis-Array liefert `.[0].number` sonst den String `"null"` zurück, der `grep -q .` fälschlich als "PR existiert schon" durchgehen lässt (beim allerersten Lauf würde nie ein PR angelegt). Mit `// empty` bleibt die Variable bei keinem Treffer tatsächlich leer.
 
 ---
 
@@ -115,7 +115,7 @@ vault/.obsidian/
 ## Offene Punkte
 
 - **Session-Persistenz**: Die Doku von `obsidian-headless` spezifiziert nicht genau, wie/wo Login-Sessions gespeichert werden. Der Workflow loggt sich bei jedem Lauf frisch ein (Runner ist ephemer) — funktioniert, ist aber ggf. langsamer als ein persistenter Client. Sollte sich das nach den ersten Läufen als unzuverlässig erweisen (Rate-Limiting etc.), muss das CLI-Verhalten erneut geprüft werden.
-- **Laufzeit von CI/E2E vs. 30-Minuten-Takt**: Falls `ci.yml` + `preview-deploy.yml` (inkl. E2E gegen die Preview) länger als ein paar Minuten brauchen, könnte der nächste Sync-Lauf schon wieder auf `sync/vault` force-pushen, während der vorherige PR noch auf Checks wartet — GitHubs `strict_required_status_checks_policy` verlangt dann ohnehin einen aktuellen Branch-Stand, sodass sich das über den nächsten Zyklus von selbst auflöst. Noch nicht über mehrere reale Zyklen hinweg beobachtet.
+- **Laufzeit von CI/E2E vs. 30-Minuten-Takt**: Falls `ci.yml` + `preview-deploy.yml` (inkl. E2E gegen die Preview) länger als ein paar Minuten brauchen, könnte der nächste Sync-Lauf schon wieder auf `chore/sync-vault` force-pushen, während der vorherige PR noch auf Checks wartet — GitHubs `strict_required_status_checks_policy` verlangt dann ohnehin einen aktuellen Branch-Stand, sodass sich das über den nächsten Zyklus von selbst auflöst. Noch nicht über mehrere reale Zyklen hinweg beobachtet.
 
 ## Hinweis
 

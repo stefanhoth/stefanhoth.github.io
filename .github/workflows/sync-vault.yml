@@ -96,15 +96,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git checkout -B sync/vault
+          git switch -c chore/sync-vault
           git add vault/
           git commit -m "chore(vault): sync from Obsidian"
-          git push --force origin sync/vault
+          git push --force origin chore/sync-vault
 
-          existing_pr=$(gh pr list --head sync/vault --state open --json number --jq '.[0].number // empty')
+          existing_pr=$(gh pr list --head chore/sync-vault --state open --json number --jq '.[0].number // empty')
           if [ -z "$existing_pr" ]; then
-            gh pr create --base main --head sync/vault \
+            gh pr create --base main --head chore/sync-vault \
               --title "chore(vault): sync from Obsidian" \
               --body "Automated vault sync — opened by .github/workflows/sync-vault.yml."
-            gh pr merge sync/vault --auto --squash
+            gh pr merge chore/sync-vault --auto --squash
           fi
