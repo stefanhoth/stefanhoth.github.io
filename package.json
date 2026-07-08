@@ -16,8 +16,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "sync:vault": "ob sync --path vault/",
-    "sync:vault:setup": "ob sync-setup --path vault/"
+    "sync:vault": "ob sync --path ./vault",
+    "sync:vault:setup": "ob sync-setup --path ./vault"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.0",

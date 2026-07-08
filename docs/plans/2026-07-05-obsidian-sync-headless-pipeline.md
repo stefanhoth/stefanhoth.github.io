@@ -34,12 +34,14 @@ Quellen: [obsidian.md/help/sync/headless](https://obsidian.md/help/sync/headless
 
 Benötigt: aktives Obsidian Sync Abonnement.
 
+2FA/MFA für das verwendete Sync-Konto ist **deaktiviert** (Entscheidung von Stefan) — nicht-interaktiver Login ist damit unproblematisch.
+
 Relevante Kommandos (verifiziert):
-- `ob login --email <email> --password <password>` — nicht-interaktiver Login. **Kein `--mfa`-Flag mit statischem Secret möglich für Dauerbetrieb** — falls das Sync-Konto 2FA/MFA aktiv hat, schlägt der automatisierte Login fehl (siehe Offene Punkte).
+- `ob login --email <email> --password <password>` — nicht-interaktiver Login.
 - `ob sync-list-remote` — Remote-Vaults auflisten (einmalig zur Namensermittlung).
-- `ob sync-setup --vault "<Name>" --path vault/ --device-name github-actions-sync [--password <e2ee-pw>]` — lokalen Ordner mit Remote-Vault verknüpfen.
-- `ob sync-config --path vault/ --mode pull-only` — Sync auf reine Pull-Richtung beschränken, damit der Workflow niemals versehentlich etwas in den Obsidian-Vault zurückschreibt.
-- `ob sync --path vault/` — einmaliger Sync-Lauf.
+- `ob sync-setup --vault "<Name>" --path ./vault --device-name github-action-website-publish [--password <e2ee-pw>]` — lokalen Ordner mit Remote-Vault verknüpfen.
+- `ob sync-config --path ./vault --mode pull-only` — zusätzlich zum ursprünglich vorgesehenen 3-Schritte-Flow ergänzt, beschränkt Sync auf reine Pull-Richtung, damit der Workflow niemals versehentlich etwas in den Obsidian-Vault zurückschreibt.
+- `ob sync --path ./vault` — einmaliger Sync-Lauf.
 
 ---
 
@@ -60,8 +62,8 @@ vault/.obsidian/
 ### 3. `package.json`
 
 ```json
-"sync:vault": "ob sync --path vault/",
-"sync:vault:setup": "ob sync-setup --path vault/"
+"sync:vault": "ob sync --path ./vault",
+"sync:vault:setup": "ob sync-setup --path ./vault"
 ```
 
 `obsidian-headless` als devDependency (statt global) — damit `npm ci` es reproduzierbar mitinstalliert und `ob` über `node_modules/.bin` verfügbar ist.
@@ -70,7 +72,7 @@ vault/.obsidian/
 
 `.github/workflows/sync-vault.yml`
 
-- Trigger: `schedule` (alle 30 Minuten) + `workflow_dispatch`
+- Trigger: `schedule` (alle 30 Minuten) + `workflow_dispatch` + `repository_dispatch` (Typ `sync-vault`) — Letzteres erlaubt einen On-Demand-Trigger von außen per Webhook: `POST /repos/stefanhoth/stefanhoth.com/dispatches` mit `{"event_type": "sync-vault"}`, authentifiziert mit einem PAT (classic: Scope `repo`; fine-grained: Permission `Contents: write`). Der eingebaute `GITHUB_TOKEN` kann diesen Endpunkt nicht selbst aufrufen — dafür ist ein separates, von Stefan verwaltetes PAT nötig, das nicht Teil dieses Workflows ist.
 - Schritte: `npm ci` → Login → Vault verknüpfen (idempotent, da Runner jedes Mal frisch startet) → Pull-only-Modus setzen → Sync → **`npm run build` als Validierungs-Gate** → Commit & Push, nur wenn der Build durchläuft
 - **Kein `[skip ci]`**: Ein direkter Push mit dem Standard-`GITHUB_TOKEN` löst laut GitHub ohnehin keine Folge-Workflows aus (Rekursionsschutz) — `ci.yml` würde auf diesem Commit gar nicht laufen. Deshalb läuft die Build-Validierung (das eigentliche Sicherheitsnetz für kaputte Frontmatter aus `docs/plans/2026-07-05-obsidian-cms-vault-struktur.md`) **innerhalb** des Sync-Jobs selbst, vor dem Commit — schlägt der Build fehl, wird nichts committet und der Job schlägt sichtbar fehl.
 - Credentials aus Repository Secrets (werden nicht im Code gespeichert)
@@ -86,15 +88,14 @@ vault/.obsidian/
    npx obsidian-headless ob login
    npx obsidian-headless ob sync-list-remote
    ```
-2. GitHub Repository Secrets anlegen: `OBSIDIAN_EMAIL`, `OBSIDIAN_PASSWORD`, `OBSIDIAN_VAULT_NAME`
-3. Optional: `OBSIDIAN_E2EE_PASSWORD`, falls der Vault Ende-zu-Ende-verschlüsselt ist
+2. GitHub Repository Secrets angelegt: `OBSIDIAN_USER`, `OBSIDIAN_PASS`, `OBSIDIAN_VAULT`
+3. Optional: `OBSIDIAN_E2EE`, falls der Vault Ende-zu-Ende-verschlüsselt ist
 4. Ersten Lauf manuell über `workflow_dispatch` anstoßen und Ergebnis prüfen, bevor man sich auf den 30-Minuten-Zeitplan verlässt
 
 ---
 
 ## Offene Punkte
 
-- **2FA/MFA**: Falls auf dem Obsidian-Account, der für den Sync verwendet wird, 2FA aktiv ist, schlägt `ob login --email --password` in der Automation fehl. Optionen: separates Sync-Konto ohne 2FA, oder 2FA für dieses Konto deaktivieren. Muss vor dem ersten produktiven Lauf geklärt werden.
 - **Deploy-Trigger**: Aktuell landet ein Vault-Update nur auf `main`, geht aber nicht automatisch live. Falls gewünscht, wäre ein separater `on: push (main)`-Workflow für `wrangler deploy` ein eigener, hier bewusst ausgeklammerter nächster Schritt.
 - **Session-Persistenz**: Die Doku von `obsidian-headless` spezifiziert nicht genau, wie/wo Login-Sessions gespeichert werden. Der Workflow loggt sich bei jedem Lauf frisch ein (Runner ist ephemer) — funktioniert, ist aber ggf. langsamer als ein persistenter Client. Sollte sich das nach den ersten Läufen als unzuverlässig erweisen (Rate-Limiting etc.), muss das CLI-Verhalten erneut geprüft werden.
 
