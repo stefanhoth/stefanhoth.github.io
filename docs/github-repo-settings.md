@@ -44,8 +44,8 @@ Das Ruleset erzwingt für `main`:
   nötig, du kannst deine eigenen PRs also sofort mergen)
 - **Required Status Checks** — die Jobs `Lint`, `Build`, `Test` und
   `E2E against preview` müssen grün sein. (`E2E against preview` kommt aus
-  `preview-deploy.yml` und testet gegen das deployte PR-Preview; der Job `E2E`
-  in `ci.yml` läuft nur noch bei Pushes auf `main` gegen einen lokalen Server.)
+  `preview-deploy.yml` und testet gegen das deployte PR-Preview. Lokal bleibt
+  `npm run test:e2e` für die Entwicklung verfügbar.)
 - **Kein Force-Push, kein Branch-Delete** auf `main`
 - **Bypass für Repository-Admins** — du selbst kannst im Notfall weiterhin
   direkt auf `main` pushen; Bots (Renovate, GitHub Actions) können das nicht.
