@@ -31,7 +31,7 @@
           { "context": "Lint", "integration_id": 15368 },
           { "context": "Build", "integration_id": 15368 },
           { "context": "Test", "integration_id": 15368 },
-          { "context": "E2E", "integration_id": 15368 }
+          { "context": "E2E against preview", "integration_id": 15368 }
         ]
       }
     }
