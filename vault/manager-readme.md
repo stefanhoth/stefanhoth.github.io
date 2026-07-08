@@ -1,7 +1,7 @@
 ---
 title: Manager README
-description: What you can expect from me as a manager.
 publish: true
+description: What you can expect from me as a manager.
 cssclasses:
   - website-page
 created: 2026-06-10

@@ -1,7 +1,7 @@
 ---
 title: Employee README
-description: What you can expect from Stefan Hoth as a direct report or colleague.
 publish: true
+description: What you can expect from Stefan Hoth as a direct report or colleague.
 cssclasses:
   - website-page
 created: 2026-06-10
@@ -9,7 +9,7 @@ created: 2026-06-10
 
 # Employee README
 
-The [[Manager README]] explains how I work as a manager. This one goes the other direction: what you can expect from me as a direct report.
+The [[manager-readme]] explains how I work as a manager. This one goes the other direction: what you can expect from me as a direct report.
 
 Same caveat applies: if this doesn't match your experience of me, tell me. The document is less useful than the conversation.
 
