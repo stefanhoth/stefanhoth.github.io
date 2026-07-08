@@ -3,7 +3,7 @@ import "../styles/global.css";
 
 const {
   title = "Stefan Hoth | Engineering Leader",
-  description = "Stefan builds successful and happy engineering teams with a focus on psychological safety and developer productivity",
+  description = "Engineering Leader building high-trust engineering organizations. Currently open to Director or Head of Engineering roles, remote-first.",
 } = Astro.props;
 ---
 
@@ -15,7 +15,7 @@ const {
     <meta name="description" content={description} />
     <meta
       name="keywords"
-      content="Engineering Manager, Engineering Leader, Director of Engineering, Software Engineering"
+      content="Engineering Manager, Engineering Leader, Director of Engineering, Head of Engineering, Software Engineering, Remote-First, Platform Engineering, Engineering Org Development"
     />
     <meta name="author" content="Stefan Hoth" />
     <title>{title}</title>
@@ -224,57 +224,44 @@ const {
         margin-bottom: 1rem;
       }
 
-      .quote {
-        background: var(--card-bg);
-        padding: 2rem;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow);
+      .latest-post {
         margin-bottom: 2rem;
-        position: relative;
-        overflow: hidden;
+        padding: 1rem 1.25rem;
+        border-left: 3px solid var(--accent);
       }
 
-      .quote::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(
-          135deg,
-          rgba(173, 216, 230, 0.1) 0%,
-          rgba(255, 228, 196, 0.1) 50%,
-          rgba(255, 192, 203, 0.1) 100%
-        );
-        z-index: 0;
+      .latest-post .label {
+        font-size: 0.875rem;
+        color: #666;
+        margin: 0 0 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
       }
 
-      .quote blockquote {
-        position: relative;
-        z-index: 1;
-        margin: 0 0 1rem 0;
-        font-size: 1.25rem;
-        font-weight: 600;
-        line-height: 1.5;
-        color: var(--text);
-        font-style: normal;
+      .latest-post h3 {
+        font-size: 1.125rem;
+        margin: 0;
       }
 
-      .quote cite {
-        position: relative;
-        z-index: 1;
-        display: block;
-        font-size: 0.9rem;
-        color: #d97706;
-        font-style: normal;
-        text-align: center;
+      .latest-post .date {
+        font-size: 0.875rem;
+        color: #666;
+        margin: 0.25rem 0 0;
+      }
+
+      .latest-post a {
+        text-decoration: none;
+        color: inherit;
+      }
+
+      .latest-post a:hover h3 {
+        text-decoration: underline;
       }
 
       @media (prefers-color-scheme: dark) {
-        .quote cite {
-          color: #fbbf24;
+        .latest-post .label,
+        .latest-post .date {
+          color: #9ca3af;
         }
       }
 
@@ -432,8 +419,6 @@ const {
         }
       }
     </style>
-  </body>
-  <body>
     <slot />
   </body>
 </html>

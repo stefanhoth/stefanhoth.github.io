@@ -1,0 +1,55 @@
+---
+// Latest Substack post, fetched at build time
+const FEED_URL = "https://stefanhoth.substack.com/feed";
+
+interface LatestPost {
+  title: string;
+  link: string;
+  pubDate: string;
+}
+
+let latest: LatestPost | null = null;
+
+try {
+  const res = await fetch(FEED_URL);
+  if (res.ok) {
+    const xml = await res.text();
+    const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/);
+    if (itemMatch) {
+      const item = itemMatch[1];
+      const titleMatch = item.match(
+        /<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/,
+      );
+      const linkMatch = item.match(/<link>([\s\S]*?)<\/link>/);
+      const dateMatch = item.match(/<pubDate>([\s\S]*?)<\/pubDate>/);
+      if (titleMatch && linkMatch) {
+        latest = {
+          title: titleMatch[1].trim(),
+          link: linkMatch[1].trim(),
+          pubDate: dateMatch
+            ? new Date(dateMatch[1]).toLocaleDateString("en-GB", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })
+            : "",
+        };
+      }
+    }
+  }
+} catch (err) {
+  console.warn("Could not fetch Substack feed at build time:", err);
+}
+---
+
+{
+  latest && (
+    <div class="latest-post">
+      <p class="label">Latest from the Substack</p>
+      <a href={latest.link} target="_blank" rel="noopener noreferrer">
+        <h3>{latest.title}</h3>
+        {latest.pubDate && <p class="date">{latest.pubDate}</p>}
+      </a>
+    </div>
+  )
+}
