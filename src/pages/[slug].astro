@@ -4,7 +4,13 @@ import Layout from "@/layouts/Layout.astro";
 
 export async function getStaticPaths() {
   const pages = await getCollection("pages", ({ data }) => data.publish);
-  return pages.map((page) => ({ params: { slug: page.id }, props: { page } }));
+  // A `permalink` frontmatter field overrides the filename-derived slug.
+  // File-style permalinks (`.md` suffix) still build the folder-style page
+  // here — the Worker serves it under the `.md` URL (see worker/index.js).
+  return pages.map((page) => ({
+    params: { slug: (page.data.permalink ?? page.id).replace(/\.md$/, "") },
+    props: { page },
+  }));
 }
 
 const { page } = Astro.props;

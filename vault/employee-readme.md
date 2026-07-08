@@ -2,6 +2,7 @@
 title: Employee README
 description: What you can expect from Stefan Hoth as a direct report or colleague.
 publish: true
+permalink: employee-readme.md
 cssclasses:
   - website-page
 created: 2026-06-10

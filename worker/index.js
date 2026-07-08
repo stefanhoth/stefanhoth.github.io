@@ -33,15 +33,31 @@ function withSecurityHeaders(response) {
   });
 }
 
-// These vault pages are published as file-style `.md` URLs rather than the
-// folder-style `/<slug>/` URL Astro's static build produces. Requests for
-// the bare or trailing-slash form redirect to the `.md` URL; the `.md`
-// request itself is served by fetching the built page directly, so the
-// visible URL never gets a trailing slash.
-const FILE_STYLE_SLUGS = ["employee-readme", "manager-readme", "projects"];
+// Vault pages with a `.md`-suffixed `permalink` frontmatter field are
+// published as file-style `.md` URLs rather than the folder-style
+// `/<slug>/` URL Astro's static build produces. Requests for the bare or
+// trailing-slash form redirect to the `.md` URL; the `.md` request itself
+// is served by fetching the built page directly, so the visible URL never
+// gets a trailing slash. The slug list is generated at build time into
+// /_file-style-pages.json (see astro.config.mjs) because this Worker is
+// bundled from a plain checkout without access to build-generated modules.
+let fileStyleSlugsPromise;
+
+function loadFileStyleSlugs(url, env) {
+  fileStyleSlugsPromise ??= env.ASSETS.fetch(
+    new URL("/_file-style-pages.json", url),
+  )
+    .then((response) => (response.ok ? response.json() : []))
+    .catch(() => {
+      // Don't cache a transient failure for the isolate's lifetime.
+      fileStyleSlugsPromise = undefined;
+      return [];
+    });
+  return fileStyleSlugsPromise;
+}
 
 async function serveFileStyleAlias(url, request, env) {
-  for (const slug of FILE_STYLE_SLUGS) {
+  for (const slug of await loadFileStyleSlugs(url, env)) {
     if (url.pathname === `/${slug}.md`) {
       const assetRequest = new Request(new URL(`/${slug}/`, url), request);
       return await env.ASSETS.fetch(assetRequest);

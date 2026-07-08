@@ -4,10 +4,11 @@ import { expect, test } from "@playwright/test";
 // instead of the local preview server — see playwright.config.ts.
 const REMOTE = Boolean(process.env.E2E_BASE_URL);
 
-// These vault pages are served under a file-style `.md` URL by the
-// Cloudflare Worker (worker/index.js + wrangler.jsonc's run_worker_first),
-// not by Astro's static build directly — `astro preview` never runs that
-// Worker code, so these only make sense against a real deployment.
+// Vault pages with a `.md`-suffixed `permalink` frontmatter field are served
+// under a file-style `.md` URL by the Cloudflare Worker (worker/index.js
+// reads the build-generated /_file-style-pages.json manifest), not by
+// Astro's static build directly — `astro preview` never runs that Worker
+// code, so these only make sense against a real deployment.
 const FILE_STYLE_PAGES = [
   "/employee-readme.md",
   "/manager-readme.md",
@@ -26,4 +27,20 @@ for (const path of FILE_STYLE_PAGES) {
     expect(response?.headers()["content-type"]).toContain("text/html");
     await expect(page.locator("article.prose")).toBeVisible();
   });
+
+  const bare = path.replace(/\.md$/, "");
+  for (const legacy of [bare, `${bare}/`]) {
+    test(`${legacy} permanently redirects to ${path}`, async ({ request }) => {
+      test.skip(
+        !REMOTE,
+        "The redirect is served by the Cloudflare Worker, which the local `astro preview` server doesn't run",
+      );
+
+      const response = await request.get(legacy, { maxRedirects: 0 });
+      expect(response.status()).toBe(301);
+      expect(
+        new URL(response.headers().location, "http://unused").pathname,
+      ).toBe(path);
+    });
+  }
 }

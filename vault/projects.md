@@ -2,6 +2,7 @@
 title: Projects
 description: A few things I've built on the side.
 publish: true
+permalink: projects.md
 ---
 
 # Projects
