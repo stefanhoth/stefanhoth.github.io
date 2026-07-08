@@ -13,11 +13,15 @@ permissions:
   deployments: write
 
 jobs:
-  preview:
-    name: Deploy preview
+  # Build runs npm lifecycle scripts (untrusted third-party code), so it is
+  # isolated from the deploy job, which holds the Cloudflare secrets.
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
@@ -26,9 +30,29 @@ jobs:
       - run: npm run build
         env:
           PUBLIC_TURNSTILE_SITE_KEY: 0x4AAAAAADw4zdHIwQQk6qDu
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
+  preview:
+    name: Deploy preview
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout provides wrangler.jsonc, worker/, and functions/ only —
+      # no npm install runs in this job.
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v7
+        with:
+          name: dist
+          path: dist/
       - name: Upload preview version
         id: deploy
-        uses: cloudflare/wrangler-action@v4
+        uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
         env:
           PR_ALIAS: pr-${{ github.event.number }}
         with:
