@@ -1,11 +1,15 @@
 ---
-// Profile component with photo, name, and tagline
+interface Props {
+  tagline: string;
+}
+
+const { tagline } = Astro.props;
 ---
 
 <div class="profile">
   <img src="/img/profile/profile.png" alt="Stefan Hoth" class="photo" width="300" height="300" />
   <h1>Stefan Hoth</h1>
-  <p class="tagline">Engineering Leader · Building high-trust engineering organizations</p>
+  <p class="tagline">{tagline}</p>
   <p class="location">Based near Dresden, Germany</p>
 </div>
 

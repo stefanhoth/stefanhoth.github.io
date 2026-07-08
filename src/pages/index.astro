@@ -1,4 +1,5 @@
 ---
+import { getEntry, render } from "astro:content";
 import About from "@/components/About.astro";
 import ContactForm from "@/components/ContactForm.astro";
 import JobHunt from "@/components/JobHunt.astro";
@@ -6,15 +7,17 @@ import LatestPost from "@/components/LatestPost.astro";
 import Links from "@/components/Links.astro";
 import Profile from "@/components/Profile.astro";
 import Layout from "@/layouts/Layout.astro";
+
+const home = await getEntry("home", "home");
+const { Content: AboutContent } = await render(home);
 ---
 
-<Layout
-  title="Stefan Hoth | Engineering Leader"
-  description="Engineering Leader building high-trust engineering organizations. Currently open to Director or Head of Engineering roles, remote-first."
->
-  <Profile />
-  <JobHunt />
-  <About />
+<Layout title={home.data.title} description={home.data.description}>
+  <Profile tagline={home.data.tagline} />
+  {home.data.jobhunt && <JobHunt text={home.data.jobhunt} />}
+  <About>
+    <AboutContent />
+  </About>
   <LatestPost />
   <Links />
   <ContactForm />
