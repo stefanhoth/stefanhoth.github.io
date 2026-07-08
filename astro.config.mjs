@@ -1,21 +1,69 @@
-import { readdirSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { unified } from "@astrojs/markdown-remark";
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
-import { unified } from "@astrojs/markdown-remark";
 import tailwindcss from "@tailwindcss/vite";
-import wikiLink from "remark-wiki-link";
 import { defineConfig } from "astro/config";
+import wikiLink from "remark-wiki-link";
 
-// Vault filenames are the source of truth for slugs (kebab-case, flat
-// directory) — used both to resolve [[Wikilink]] targets to those slugs
-// and to mark links to non-existent pages as "new".
-const vaultPermalinks = readdirSync(new URL("./vault", import.meta.url))
+// Vault files are the source of truth for what gets published and under
+// which URL. The filename provides the default slug; an optional
+// `permalink` frontmatter field overrides it. A permalink ending in `.md`
+// makes the page a "file-style" URL: the Worker serves it at /<slug>.md
+// and redirects the bare/trailing-slash forms there (see worker/index.js).
+//
+// Frontmatter is read with a small regex parser instead of a YAML library
+// because only two scalar fields are needed and the vault is synced from
+// Obsidian, which writes plain `key: value` lines.
+function parseVaultPage(filename) {
+  const raw = readFileSync(
+    new URL(`./vault/${filename}`, import.meta.url),
+    "utf8",
+  );
+  const frontmatter = raw.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? "";
+  return {
+    slug: filename
+      .replace(/\.md$/, "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-"),
+    permalink: frontmatter.match(
+      /^permalink:\s*["']?([^\s"']+)["']?\s*$/m,
+    )?.[1],
+    publish: /^publish:\s*true\s*$/m.test(frontmatter),
+  };
+}
+
+const vaultPages = readdirSync(new URL("./vault", import.meta.url))
   .filter((name) => name.endsWith(".md"))
-  .map((name) => name.replace(/\.md$/, ""));
+  .map(parseVaultPage);
+
+const vaultPagesBySlug = new Map(vaultPages.map((page) => [page.slug, page]));
+
+// Emits the list of file-style page slugs into the build output so the
+// Worker can read it at runtime via the ASSETS binding — the Worker bundle
+// itself is built from a plain checkout (see preview-deploy.yml), so it
+// can't import build-generated modules.
+function fileStyleManifest() {
+  return {
+    name: "file-style-manifest",
+    hooks: {
+      "astro:build:done": ({ dir }) => {
+        const slugs = vaultPages
+          .filter((page) => page.publish && page.permalink?.endsWith(".md"))
+          .map((page) => page.permalink.replace(/\.md$/, ""));
+        writeFileSync(
+          new URL("_file-style-pages.json", dir),
+          JSON.stringify(slugs),
+        );
+      },
+    },
+  };
+}
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [react(), mdx()],
+  integrations: [react(), mdx(), fileStyleManifest()],
   output: "static",
   site: "https://stefanhoth.com",
   base: "/",
@@ -28,9 +76,15 @@ export default defineConfig({
           {
             aliasDivider: "|",
             pathFormat: "obsidian-short",
-            hrefTemplate: (permalink) => `/${permalink}`,
-            permalinks: vaultPermalinks,
-            pageResolver: (name) => [name.trim().toLowerCase().replace(/\s+/g, "-")],
+            // Resolved wikilinks point at the page's publish URL (its
+            // permalink if set, else the filename slug); unresolved ones
+            // keep the slugified name and get marked "new".
+            hrefTemplate: (slug) =>
+              `/${vaultPagesBySlug.get(slug)?.permalink ?? slug}`,
+            permalinks: vaultPages.map((page) => page.slug),
+            pageResolver: (name) => [
+              name.trim().toLowerCase().replace(/\s+/g, "-"),
+            ],
           },
         ],
       ],

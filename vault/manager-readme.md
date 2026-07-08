@@ -1,6 +1,7 @@
 ---
 title: Manager README
 publish: true
+permalink: manager-readme.md
 description: What you can expect from me as a manager.
 cssclasses:
   - website-page

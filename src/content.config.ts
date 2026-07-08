@@ -18,6 +18,16 @@ const pages = defineCollection({
       title: z.string().optional(),
       description: z.string().optional(),
       publish: z.boolean().default(false),
+      // Overrides the filename-derived slug. With a `.md` suffix the page
+      // is published as a file-style URL (/<slug>.md, served by the Worker);
+      // without it, as a regular folder-style URL (/<slug>/).
+      permalink: z
+        .string()
+        .regex(
+          /^[a-z0-9][a-z0-9-]*(\.md)?$/,
+          "permalink muss ein kebab-case Slug sein, optional mit .md-Endung",
+        )
+        .optional(),
     })
     .superRefine((data, ctx) => {
       if (data.publish && !data.title) {
