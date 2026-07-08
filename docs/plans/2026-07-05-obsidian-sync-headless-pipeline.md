@@ -1,8 +1,8 @@
 # Plan: Obsidian Sync Headless → GitHub Repo → Cloudflare Workers
 
 **Datum:** 2026-07-05
-**Aktualisiert:** 2026-07-08 — Netlify-Annahmen durch den tatsächlichen Cloudflare-Workers-Flow ersetzt, CLI-Kommandos gegen die offizielle `obsidian-headless`-Doku verifiziert.
-**Status:** Umgesetzt (Workflow `sync-vault.yml`) — Repository-Secrets müssen noch manuell angelegt werden.
+**Aktualisiert:** 2026-07-08 — Netlify-Annahmen durch den tatsächlichen Cloudflare-Workers-Flow ersetzt, CLI-Kommandos gegen die offizielle `obsidian-headless`-Doku verifiziert. Korrigiert: entgegen einer ersten (falschen) Version dieses Dokuments deployt Cloudflare bei Push auf `main` automatisch in Produktion, über die Cloudflare-GitHub-App ("Cloudflare Workers and Pages", Dashboard-Integration, kein Workflow in diesem Repo) — sichtbar als Check-Run `Workers Builds: stefanhoth-com`. Ein Vault-Sync auf `main` geht damit **automatisch live**, sobald Cloudflares eigener Build erfolgreich ist.
+**Status:** Umgesetzt (Workflow `sync-vault.yml`) — Repository-Secrets angelegt (`OBSIDIAN_USER`/`PASS`/`VAULT`/`E2EE`).
 
 ---
 
@@ -16,16 +16,15 @@ Vault-Inhalte aus Obsidian Sync automatisch ins GitHub-Repository ziehen, ohne d
 Obsidian App (any device)
         ↓  bearbeiten
 Obsidian Sync (Cloud)
-        ↓  ob sync (GitHub Actions, alle 30 Min + manuell)
-GitHub Repo  →  vault/  (Commit auf main)
+        ↓  ob sync (GitHub Actions, alle 30 Min + manuell + Webhook)
+GitHub Repo  →  vault/  (Commit auf main, nur wenn npm run build durchläuft)
         ↓
-        (kein Auto-Deploy bei Push auf main — Deploy bleibt der bestehende
-         manuelle Schritt: `npm run worker:deploy`, oder ein PR mit
-         Preview-Deploy via preview-deploy.yml)
-stefanhoth.com  (nach manuellem Deploy)
+        Cloudflare Workers Builds (GitHub-App-Integration, kein Workflow
+        in diesem Repo — baut + deployt automatisch bei jedem Push auf main)
+stefanhoth.com  (live, sobald der Cloudflare-Build erfolgreich ist)
 ```
 
-**Wichtiger Unterschied zum ursprünglichen Plan:** Das Repo lief beim Schreiben dieses Plans noch auf Netlify (Auto-Deploy bei jedem Push auf `main`). Seit PR #44 läuft es auf Cloudflare Workers — es gibt **keinen automatischen Produktions-Deploy bei Push auf main**. `ci.yml` läuft bei Push auf main (Lint/Build/Test), `preview-deploy.yml` nur bei Pull Requests. Der Sync-Workflow committet also Vault-Änderungen auf `main`, aber die Seite geht erst live, wenn jemand `npm run worker:deploy` ausführt (oder das über einen separaten Auto-Deploy-Workflow ergänzt wird — das ist bewusst **nicht** Teil dieses Schritts, siehe „Bestehende Infrastruktur bleibt unverändert" unten).
+**Unterschied zum ursprünglichen Plan:** Das Repo lief beim Schreiben dieses Plans noch auf Netlify (Auto-Deploy bei jedem Push auf `main`). Seit PR #44 läuft es auf Cloudflare Workers — der Mechanismus dahinter hat sich geändert, das Verhalten aber nicht: Die Cloudflare-GitHub-App ("Cloudflare Workers and Pages") ist auf das Repo installiert und deployt bei jedem Push auf `main` automatisch nach Produktion (Check-Run `Workers Builds: stefanhoth-com`, sichtbar z. B. unter github.com/stefanhoth/stefanhoth.com/runs/&lt;id&gt;). Das läuft unabhängig von `ci.yml` (Lint/Build/Test) und `preview-deploy.yml` (nur bei PRs) — beide bleiben unverändert bestehen. Ein Vault-Sync, der auf `main` committet wird, geht also **automatisch live**, sobald Cloudflares eigener Build erfolgreich durchläuft. Das `npm run build`-Gate im Sync-Workflow (siehe unten) verhindert zusätzlich, dass kaputte Frontmatter überhaupt erst auf `main` landet — Cloudflares Build ist die zweite, nachgelagerte Absicherung.
 
 ## Tool
 
@@ -96,7 +95,6 @@ vault/.obsidian/
 
 ## Offene Punkte
 
-- **Deploy-Trigger**: Aktuell landet ein Vault-Update nur auf `main`, geht aber nicht automatisch live. Falls gewünscht, wäre ein separater `on: push (main)`-Workflow für `wrangler deploy` ein eigener, hier bewusst ausgeklammerter nächster Schritt.
 - **Session-Persistenz**: Die Doku von `obsidian-headless` spezifiziert nicht genau, wie/wo Login-Sessions gespeichert werden. Der Workflow loggt sich bei jedem Lauf frisch ein (Runner ist ephemer) — funktioniert, ist aber ggf. langsamer als ein persistenter Client. Sollte sich das nach den ersten Läufen als unzuverlässig erweisen (Rate-Limiting etc.), muss das CLI-Verhalten erneut geprüft werden.
 
 ## Hinweis
@@ -108,5 +106,5 @@ Obsidian Sync Headless und die Desktop-App sollten **nicht gleichzeitig auf dems
 ## Bestehende Infrastruktur bleibt unverändert
 
 - Astro + Tailwind + Content Layer (Haupt-Site, seit PR #67)
-- Cloudflare Workers (Deployment, weiterhin manuell via `npm run worker:deploy`)
+- Cloudflare Workers Builds (automatisches Deployment bei Push auf `main`, über die Cloudflare-GitHub-App — unverändert seit PR #44, `npm run worker:deploy` bleibt zusätzlich für manuelle/lokale Deploys verfügbar)
 - Kein Obsidian Publish Abonnement erforderlich
