@@ -60,12 +60,7 @@ vault/.obsidian/
 
 ### 3. `package.json`
 
-```json
-"sync:vault": "ob sync --path ./vault",
-"sync:vault:setup": "ob sync-setup --path ./vault"
-```
-
-`obsidian-headless` als devDependency (statt global) — damit `npm ci` es reproduzierbar mitinstalliert und `ob` über `node_modules/.bin` verfügbar ist.
+`obsidian-headless` als devDependency (statt global) — damit `npm ci` es reproduzierbar mitinstalliert und `ob` über `node_modules/.bin` verfügbar ist. Bewusst **keine** `sync:vault*`-Scripts: Der Workflow ruft `ob` direkt mit vollen Flags auf, und als lokale Convenience wären sie kaum mehr als eine dünne Hülle (`sync-setup` bräuchte den Vault-Namen ohnehin bei jedem Aufruf per `-- --vault "..."`). Für einen manuellen Lauf: `node_modules/.bin/ob sync-setup --vault "<Name>" --path ./vault`.
 
 ### 4. GitHub Actions Workflow
 
