@@ -45,6 +45,17 @@ jobs:
       - name: Add local node_modules/.bin to PATH
         run: echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"
 
+      # A fresh checkout has no Obsidian Sync state, so a pull never learns
+      # about files that were deleted remotely — they would linger in the
+      # repo forever. Start from an empty directory so the pull produces an
+      # exact mirror of the vault, including deletions and renames. Safe to
+      # do before anything is committed: if the sync fails, the job aborts
+      # and nothing is pushed.
+      - name: Empty the vault directory for a mirror sync
+        run: |
+          rm -rf ./vault
+          mkdir ./vault
+
       - name: Log in to Obsidian Sync
         env:
           OBSIDIAN_EMAIL: ${{ secrets.OBSIDIAN_USER }}
