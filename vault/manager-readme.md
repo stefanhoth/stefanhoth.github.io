@@ -6,6 +6,7 @@ cssclasses:
   - website-page
 created: 2026-06-10
 permalink: manager-readme.md
+template: sidebar
 ---
 
 # Manager README

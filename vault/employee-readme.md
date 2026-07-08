@@ -6,6 +6,7 @@ cssclasses:
   - website-page
 created: 2026-06-10
 permalink: employee-readme.md
+template: sidebar
 ---
 # Employee README
 
