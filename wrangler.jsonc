@@ -7,7 +7,21 @@
   "routes": [{ "pattern": "stefanhoth.com", "custom_domain": true }],
   "assets": {
     "directory": "./dist",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    // These paths need the Worker in front of them so it can serve the
+    // .md URL as a file (no trailing-slash redirect) and redirect the
+    // old bare/trailing-slash forms to it. See worker/index.js.
+    "run_worker_first": [
+      "/employee-readme",
+      "/employee-readme/",
+      "/employee-readme.md",
+      "/manager-readme",
+      "/manager-readme/",
+      "/manager-readme.md",
+      "/projects",
+      "/projects/",
+      "/projects.md"
+    ]
   },
   "observability": {
     "logs": {
