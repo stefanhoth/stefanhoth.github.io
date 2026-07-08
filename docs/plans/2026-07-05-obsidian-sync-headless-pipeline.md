@@ -83,10 +83,10 @@ vault/.obsidian/
 
 ## Voraussetzungen (einmalig manuell, durch Stefan)
 
-1. Vault-Namen ermitteln:
+1. Vault-Namen ermitteln (das Paket exportiert nur ein Binary namens `ob`, nicht `obsidian-headless` — daher `npx -p obsidian-headless`, nicht `npx obsidian-headless`):
    ```bash
-   npx obsidian-headless ob login
-   npx obsidian-headless ob sync-list-remote
+   npx -p obsidian-headless ob login
+   npx -p obsidian-headless ob sync-list-remote
    ```
 2. GitHub Repository Secrets angelegt: `OBSIDIAN_USER`, `OBSIDIAN_PASS`, `OBSIDIAN_VAULT`
 3. Optional: `OBSIDIAN_E2EE`, falls der Vault Ende-zu-Ende-verschlüsselt ist

@@ -38,8 +38,15 @@ jobs:
           cache: npm
       - run: npm ci
 
+      # obsidian-headless is a devDependency, not a global install — put its
+      # bin on PATH directly instead of going through npx. `npx ob` would
+      # also match the unrelated "ob" package on the npm registry, so it's
+      # not safe to rely on npx falling back correctly in every environment.
+      - name: Add local node_modules/.bin to PATH
+        run: echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"
+
       - name: Log in to Obsidian Sync
-        run: npx ob login --email "$OBSIDIAN_EMAIL" --password "$OBSIDIAN_PASSWORD"
+        run: ob login --email "$OBSIDIAN_EMAIL" --password "$OBSIDIAN_PASSWORD"
         env:
           OBSIDIAN_EMAIL: ${{ secrets.OBSIDIAN_USER }}
           OBSIDIAN_PASSWORD: ${{ secrets.OBSIDIAN_PASS }}
@@ -50,16 +57,16 @@ jobs:
           if [ -n "$OBSIDIAN_E2EE_PASSWORD" ]; then
             ARGS+=(--password "$OBSIDIAN_E2EE_PASSWORD")
           fi
-          npx ob sync-setup "${ARGS[@]}"
+          ob sync-setup "${ARGS[@]}"
         env:
           OBSIDIAN_VAULT_NAME: ${{ secrets.OBSIDIAN_VAULT }}
           OBSIDIAN_E2EE_PASSWORD: ${{ secrets.OBSIDIAN_E2EE }}
 
       - name: Restrict sync to pull-only
-        run: npx ob sync-config --path ./vault --mode pull-only
+        run: ob sync-config --path ./vault --mode pull-only
 
       - name: Pull latest vault content
-        run: npx ob sync --path ./vault
+        run: ob sync --path ./vault
 
       - name: Check for changes
         id: changes
