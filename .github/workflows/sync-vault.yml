@@ -17,18 +17,18 @@ concurrency:
   group: sync-vault
   cancel-in-progress: false
 
+# main is protected by a ruleset requiring a PR with 4 green status checks
+# (Lint/Build/Test/E2E against preview) and a successful "preview" deployment
+# — a direct push is rejected. Nothing here writes with the default
+# GITHUB_TOKEN, so no elevated permissions are needed for it.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   sync:
     name: Sync vault from Obsidian
     runs-on: ubuntu-latest
     steps:
-      # persist-credentials: false — npm ci below runs third-party postinstall
-      # scripts (e.g. better-sqlite3's), so the write-scoped GITHUB_TOKEN is
-      # kept out of the git config until the final push step, which sets it
-      # explicitly and only for that one command.
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           persist-credentials: false
@@ -77,22 +77,34 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # Guards against broken frontmatter reaching main: a direct push here
-      # authenticated with GITHUB_TOKEN does not trigger ci.yml (GitHub skips
-      # workflow runs triggered by the default token), so this is the only
-      # build validation the synced content gets before landing on main.
+      # First gate: catches broken frontmatter before it's even pushed to a
+      # branch. ci.yml's own Build job is the second, required gate on the PR.
       - name: Validate build
         if: steps.changes.outputs.changed == 'true'
         run: npm run build
 
-      - name: Commit and push vault changes
+      # Pushed and opened with a PAT, not the default GITHUB_TOKEN: pushes and
+      # PR events authenticated with GITHUB_TOKEN don't trigger downstream
+      # workflows, which would leave ci.yml/preview-deploy.yml — and the
+      # required status checks / preview deployment the branch ruleset
+      # demands — never running.
+      - name: Push branch and open/refresh the PR
         if: steps.changes.outputs.changed == 'true'
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GH_COMMIT_PAT }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git checkout -B sync/vault
           git add vault/
           git commit -m "chore(vault): sync from Obsidian"
-          git push
+          git push --force origin sync/vault
+
+          existing_pr=$(gh pr list --head sync/vault --state open --json number --jq '.[0].number // empty')
+          if [ -z "$existing_pr" ]; then
+            gh pr create --base main --head sync/vault \
+              --title "chore(vault): sync from Obsidian" \
+              --body "Automated vault sync — opened by .github/workflows/sync-vault.yml."
+            gh pr merge sync/vault --auto --squash
+          fi

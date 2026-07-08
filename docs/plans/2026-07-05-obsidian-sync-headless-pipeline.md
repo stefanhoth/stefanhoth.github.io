@@ -1,8 +1,9 @@
 # Plan: Obsidian Sync Headless → GitHub Repo → Cloudflare Workers
 
 **Datum:** 2026-07-05
-**Aktualisiert:** 2026-07-08 — Netlify-Annahmen durch den tatsächlichen Cloudflare-Workers-Flow ersetzt, CLI-Kommandos gegen die offizielle `obsidian-headless`-Doku verifiziert. Korrigiert: entgegen einer ersten (falschen) Version dieses Dokuments deployt Cloudflare bei Push auf `main` automatisch in Produktion, über die Cloudflare-GitHub-App ("Cloudflare Workers and Pages", Dashboard-Integration, kein Workflow in diesem Repo) — sichtbar als Check-Run `Workers Builds: stefanhoth-com`. Ein Vault-Sync auf `main` geht damit **automatisch live**, sobald Cloudflares eigener Build erfolgreich ist.
-**Status:** Umgesetzt (Workflow `sync-vault.yml`) — Repository-Secrets angelegt (`OBSIDIAN_USER`/`PASS`/`VAULT`/`E2EE`).
+**Aktualisiert:** 2026-07-08 — Netlify-Annahmen durch den tatsächlichen Cloudflare-Workers-Flow ersetzt, CLI-Kommandos gegen die offizielle `obsidian-headless`-Doku verifiziert. Korrigiert: entgegen einer ersten (falschen) Version dieses Dokuments deployt Cloudflare bei Push auf `main` automatisch in Produktion, über die Cloudflare-GitHub-App ("Cloudflare Workers and Pages", Dashboard-Integration, kein Workflow in diesem Repo) — sichtbar als Check-Run `Workers Builds: stefanhoth-com`. Ein Vault-Sync, der auf `main` landet, geht damit **automatisch live**, sobald Cloudflares eigener Build erfolgreich ist.
+**Zweite Korrektur (nach dem ersten echten Lauf):** Direkter Push auf `main` wird von einer aktiven Repository-Ruleset ("Protect main") abgelehnt — PR Pflicht, 4 grüne Status-Checks (Lint/Build/Test/E2E gegen Preview) und ein erfolgreiches `preview`-Deployment sind Voraussetzung fürs Mergen (0 Approvals nötig). Der Workflow committet daher auf einen festen Branch `sync/vault`, öffnet/aktualisiert dort einen PR und aktiviert Auto-Merge, statt direkt auf `main` zu pushen.
+**Status:** Umgesetzt (Workflow `sync-vault.yml`) — Repository-Secrets angelegt (`OBSIDIAN_USER`/`PASS`/`VAULT`/`E2EE`, `GH_COMMIT_PAT`).
 
 ---
 
@@ -17,14 +18,32 @@ Obsidian App (any device)
         ↓  bearbeiten
 Obsidian Sync (Cloud)
         ↓  ob sync (GitHub Actions, alle 30 Min + manuell + Webhook)
-GitHub Repo  →  vault/  (Commit auf main, nur wenn npm run build durchläuft)
+Branch sync/vault  (force-gepusht, nur wenn npm run build durchläuft)
+        ↓  PR main ← sync/vault (per PAT geöffnet, damit Checks überhaupt laufen)
+ci.yml (Lint/Build/Test) + preview-deploy.yml (Preview-Deployment + E2E)
+        ↓  alle 4 Checks grün + erfolgreiches preview-Deployment
+Auto-Merge (squash) → main
         ↓
         Cloudflare Workers Builds (GitHub-App-Integration, kein Workflow
         in diesem Repo — baut + deployt automatisch bei jedem Push auf main)
 stefanhoth.com  (live, sobald der Cloudflare-Build erfolgreich ist)
 ```
 
-**Unterschied zum ursprünglichen Plan:** Das Repo lief beim Schreiben dieses Plans noch auf Netlify (Auto-Deploy bei jedem Push auf `main`). Seit PR #44 läuft es auf Cloudflare Workers — der Mechanismus dahinter hat sich geändert, das Verhalten aber nicht: Die Cloudflare-GitHub-App ("Cloudflare Workers and Pages") ist auf das Repo installiert und deployt bei jedem Push auf `main` automatisch nach Produktion (Check-Run `Workers Builds: stefanhoth-com`, sichtbar z. B. unter github.com/stefanhoth/stefanhoth.com/runs/&lt;id&gt;). Das läuft unabhängig von `ci.yml` (Lint/Build/Test) und `preview-deploy.yml` (nur bei PRs) — beide bleiben unverändert bestehen. Ein Vault-Sync, der auf `main` committet wird, geht also **automatisch live**, sobald Cloudflares eigener Build erfolgreich durchläuft. Das `npm run build`-Gate im Sync-Workflow (siehe unten) verhindert zusätzlich, dass kaputte Frontmatter überhaupt erst auf `main` landet — Cloudflares Build ist die zweite, nachgelagerte Absicherung.
+**Unterschied zum ursprünglichen Plan:** Das Repo lief beim Schreiben dieses Plans noch auf Netlify (Auto-Deploy bei jedem Push auf `main`). Seit PR #44 läuft es auf Cloudflare Workers — der Mechanismus dahinter hat sich geändert, das Verhalten aber nicht: Die Cloudflare-GitHub-App ("Cloudflare Workers and Pages") ist auf das Repo installiert und deployt bei jedem Push auf `main` automatisch nach Produktion (Check-Run `Workers Builds: stefanhoth-com`). Das läuft unabhängig von `ci.yml` und `preview-deploy.yml` — beide bleiben unverändert bestehen.
+
+**Zweite, wichtigere Abweichung:** Ein direkter Bot-Push auf `main` — egal ob mit dem Standard-`GITHUB_TOKEN` oder einem PAT — wird von der Repository-Ruleset "Protect main" abgelehnt (siehe unten). Der Workflow geht deshalb über einen PR, nicht über einen direkten Commit auf `main`. Das hat einen erwünschten Nebeneffekt: Vault-Syncs durchlaufen jetzt dieselben Qualitäts-Gates (Lint/Build/Test/E2E gegen eine echte Preview-Deployment) wie jede von Hand gemachte Änderung — nicht nur das repo-interne `npm run build`.
+
+### Warum PR statt Direct-Push (Repository-Ruleset)
+
+Die aktive Ruleset **„Protect main"** (`gh api repos/stefanhoth/stefanhoth.com/rulesets/18674761`) verlangt für `main`:
+- Änderungen nur per Pull Request (0 Approvals nötig, keine Code-Owner-Pflicht)
+- 4 grüne Status-Checks: `Lint`, `Build`, `Test`, `E2E against preview` (alle aus `ci.yml`/`preview-deploy.yml`)
+- Ein erfolgreiches Deployment ins Environment `preview` (aus `preview-deploy.yml`)
+- Linear History (nur Squash-Merge ist im Repo überhaupt erlaubt — passt zusammen)
+
+Ein Push mit dem Standard-`GITHUB_TOKEN` scheiterte im ersten echten Testlauf direkt an dieser Regel (`GH013: Repository rule violations`). Zusätzlich gilt: Ereignisse, die mit dem Standard-`GITHUB_TOKEN` ausgelöst werden, lösen laut GitHub **keine** Folge-Workflows aus — das betrifft nicht nur `push`, sondern auch `pull_request`. Ein mit `GITHUB_TOKEN` geöffneter PR hätte also nie die geforderten Checks laufen lassen. Deshalb verwendet der Workflow für Branch-Push **und** PR-Erstellung ein separates PAT (`GH_COMMIT_PAT`), das wie ein normaler externer Akteur behandelt wird und `ci.yml`/`preview-deploy.yml` ganz normal auslöst.
+
+Erwogene Alternative: den GitHub-Actions-Bot als Bypass-Actor in die Ruleset eintragen. Verworfen, weil Rulesets keine Ausnahme pro Workflow erlauben — nur pro Rolle/Team/Integration. Ein Bypass für die Actions-Integration (der Default-`GITHUB_TOKEN` läuft unter dieser Integration) hätte die Regel für **jeden** Workflow im Repo ausgehebelt, nicht nur für `sync-vault.yml`.
 
 ## Tool
 
@@ -66,13 +85,13 @@ vault/.obsidian/
 
 `.github/workflows/sync-vault.yml`
 
-- Trigger: `schedule` (alle 30 Minuten) + `workflow_dispatch` + `repository_dispatch` (Typ `sync-vault`) — Letzteres erlaubt einen On-Demand-Trigger von außen per Webhook: `POST /repos/stefanhoth/stefanhoth.com/dispatches` mit `{"event_type": "sync-vault"}`, authentifiziert mit einem PAT (classic: Scope `repo`; fine-grained: Permission `Contents: write`). Der eingebaute `GITHUB_TOKEN` kann diesen Endpunkt nicht selbst aufrufen — dafür ist ein separates, von Stefan verwaltetes PAT nötig, das nicht Teil dieses Workflows ist.
-- Schritte: `npm ci` → Login → Vault verknüpfen (idempotent, da Runner jedes Mal frisch startet) → Pull-only-Modus setzen → Sync → **`npm run build` als Validierungs-Gate** → Commit & Push, nur wenn der Build durchläuft
-- **Kein `[skip ci]`**: Ein direkter Push mit dem Standard-`GITHUB_TOKEN` löst laut GitHub ohnehin keine Folge-Workflows aus (Rekursionsschutz) — `ci.yml` würde auf diesem Commit gar nicht laufen. Deshalb läuft die Build-Validierung (das eigentliche Sicherheitsnetz für kaputte Frontmatter aus `docs/plans/2026-07-05-obsidian-cms-vault-struktur.md`) **innerhalb** des Sync-Jobs selbst, vor dem Commit — schlägt der Build fehl, wird nichts committet und der Job schlägt sichtbar fehl.
-- **Deploy wird trotzdem getriggert**: Der `GITHUB_TOKEN`-Rekursionsschutz betrifft nur GitHub-Actions-Workflows im selben Repo. Cloudflares GitHub-App bekommt den Push-Webhook auch bei Bot-Pushes zugestellt ([bestätigt in GitHubs Community-Diskussion #25702](https://github.com/orgs/community/discussions/25702)) und deployt den Sync-Commit ganz normal — Content-Update und Deployment sind also **nicht** voneinander getrennt.
-- Credentials aus Repository Secrets (werden nicht im Code gespeichert)
-- `permissions: contents: write`, sonst nichts
-- `checkout` mit `persist-credentials: false`: `npm ci` führt Postinstall-Skripte Dritter aus (u. a. für `better-sqlite3`, eine native Abhängigkeit von `obsidian-headless`); der schreibende `GITHUB_TOKEN` wird erst im letzten Schritt (Commit & Push) explizit in die Remote-URL eingesetzt, damit er während `npm ci` und den Obsidian-CLI-Schritten nicht im Git-Credential-Store liegt
+- Trigger: `schedule` (alle 30 Minuten) + `workflow_dispatch` + `repository_dispatch` (Typ `sync-vault`) — Letzteres erlaubt einen On-Demand-Trigger von außen per Webhook: `POST /repos/stefanhoth/stefanhoth.com/dispatches` mit `{"event_type": "sync-vault"}`, authentifiziert mit einem PAT (classic: Scope `repo`; fine-grained: Permission `Contents: write`). Der eingebaute `GITHUB_TOKEN` kann diesen Endpunkt nicht selbst aufrufen.
+- Schritte: `npm ci` → Login → Vault verknüpfen (idempotent, da Runner jedes Mal frisch startet) → Pull-only-Modus setzen → Sync → **`npm run build` als erste Validierung** → nur bei Änderungen: Branch `sync/vault` von aktuellem `main` neu aufbauen, force-pushen, PR öffnen (falls noch keiner offen ist) und Auto-Merge (Squash) aktivieren
+- Branch-Strategie: fester, wiederverwendeter Branch `sync/vault` statt ein Branch pro Lauf — jeder Lauf baut ihn frisch von `main` aus neu auf (`git checkout -B` + `--force`-Push). Dadurch bleibt ein offener PR immer der vollständige, aktuelle Vault-Stand, auch wenn mehrere 30-Minuten-Zyklen vergehen, bevor die Checks durchlaufen. Nach dem Merge löscht GitHub den Branch automatisch (`deleteBranchOnMerge` ist an), der nächste Lauf legt ihn neu an.
+- Push und PR-Erstellung laufen über `secrets.GH_COMMIT_PAT`, nicht über `GITHUB_TOKEN` — siehe Begründung oben (sonst laufen `ci.yml`/`preview-deploy.yml` gar nicht an, und ein Push auf `main` würde ohnehin an der Ruleset scheitern).
+- `permissions: contents: read` — der Job schreibt nichts mit dem Default-Token, alles Schreibende läuft über das PAT.
+- `checkout` mit `persist-credentials: false`: reines Vorsichtsprinzip, da `npm ci` Postinstall-Skripte Dritter ausführt (u. a. für `better-sqlite3`, eine native Abhängigkeit von `obsidian-headless`).
+- `gh pr list --head sync/vault --state open --json number --jq '.[0].number // empty'` statt `--jq '.[0].number' | grep -q .` — bei leerem Ergebnis-Array liefert `.[0].number` sonst den String `"null"` zurück, der `grep -q .` fälschlich als "PR existiert schon" durchgehen lässt (beim allerersten Lauf würde nie ein PR angelegt). Mit `// empty` bleibt die Variable bei keinem Treffer tatsächlich leer.
 
 ---
 
@@ -85,15 +104,18 @@ vault/.obsidian/
    ```
 2. GitHub Repository Secrets angelegt: `OBSIDIAN_USER`, `OBSIDIAN_PASS`, `OBSIDIAN_VAULT`
 3. Optional: `OBSIDIAN_E2EE`, falls der Vault Ende-zu-Ende-verschlüsselt ist
-4. Ersten Lauf manuell über `workflow_dispatch` anstoßen und Ergebnis prüfen, bevor man sich auf den 30-Minuten-Zeitplan verlässt. Dabei auch verifizieren:
-   - dass der Sync-Commit auf `main` einen `Workers Builds: stefanhoth-com`-Check-Run auslöst (= Deploy läuft)
-   - dass im Cloudflare-Dashboard (**Settings → Builds**) keine [Build Watch Paths](https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/) konfiguriert sind, die `vault/` ausschließen — sonst würde Cloudflare den Build für reine Vault-Commits überspringen und Content-Update und Deployment wären doch getrennt
+4. `GH_COMMIT_PAT` angelegt: ein PAT mit Schreibrechten auf `Contents` und `Pull requests` für dieses Repo (fine-grained, auf dieses eine Repo beschränkt — kein Admin/Owner-Scope nötig, da die Ruleset für normale PRs 0 Approvals verlangt)
+5. Ersten Lauf manuell über `workflow_dispatch` anstoßen und Ergebnis prüfen, bevor man sich auf den 30-Minuten-Zeitplan verlässt. Dabei auch verifizieren:
+   - dass der PR tatsächlich aufgeht und `ci.yml` + `preview-deploy.yml` darauf laufen (nicht nur `workflow_dispatch`/`repository_dispatch` selbst)
+   - dass Auto-Merge sich nach allen 4 grünen Checks + erfolgreichem `preview`-Deployment tatsächlich auslöst
+   - dass der gemergte Commit auf `main` einen `Workers Builds: stefanhoth-com`-Check-Run auslöst (= Cloudflare-Deploy läuft)
 
 ---
 
 ## Offene Punkte
 
 - **Session-Persistenz**: Die Doku von `obsidian-headless` spezifiziert nicht genau, wie/wo Login-Sessions gespeichert werden. Der Workflow loggt sich bei jedem Lauf frisch ein (Runner ist ephemer) — funktioniert, ist aber ggf. langsamer als ein persistenter Client. Sollte sich das nach den ersten Läufen als unzuverlässig erweisen (Rate-Limiting etc.), muss das CLI-Verhalten erneut geprüft werden.
+- **Laufzeit von CI/E2E vs. 30-Minuten-Takt**: Falls `ci.yml` + `preview-deploy.yml` (inkl. E2E gegen die Preview) länger als ein paar Minuten brauchen, könnte der nächste Sync-Lauf schon wieder auf `sync/vault` force-pushen, während der vorherige PR noch auf Checks wartet — GitHubs `strict_required_status_checks_policy` verlangt dann ohnehin einen aktuellen Branch-Stand, sodass sich das über den nächsten Zyklus von selbst auflöst. Noch nicht über mehrere reale Zyklen hinweg beobachtet.
 
 ## Hinweis
 
