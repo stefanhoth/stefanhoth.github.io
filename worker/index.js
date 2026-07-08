@@ -38,10 +38,10 @@ function withSecurityHeaders(response) {
 // the bare or trailing-slash form redirect to the `.md` URL; the `.md`
 // request itself is served by fetching the built page directly, so the
 // visible URL never gets a trailing slash.
-const README_SLUGS = ["employee-readme", "manager-readme"];
+const FILE_STYLE_SLUGS = ["employee-readme", "manager-readme", "projects"];
 
-async function serveReadmeAlias(url, request, env) {
-  for (const slug of README_SLUGS) {
+async function serveFileStyleAlias(url, request, env) {
+  for (const slug of FILE_STYLE_SLUGS) {
     if (url.pathname === `/${slug}.md`) {
       const assetRequest = new Request(new URL(`/${slug}/`, url), request);
       return await env.ASSETS.fetch(assetRequest);
@@ -61,9 +61,9 @@ export default {
       return withSecurityHeaders(await onRequestPost({ request, env }));
     }
 
-    const readmeResponse = await serveReadmeAlias(url, request, env);
-    if (readmeResponse) {
-      return withSecurityHeaders(readmeResponse);
+    const fileStyleResponse = await serveFileStyleAlias(url, request, env);
+    if (fileStyleResponse) {
+      return withSecurityHeaders(fileStyleResponse);
     }
 
     return withSecurityHeaders(await env.ASSETS.fetch(request));
