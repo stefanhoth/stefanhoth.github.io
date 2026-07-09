@@ -1,7 +1,8 @@
 # Plan: Obsidian-Vault-Struktur & Build-Time-Ingestion (Astro Content Layer)
 
 **Datum:** 2026-07-05
-**Status:** In Planung
+**Status:** Umgesetzt (PR #67, erweitert in PR #74/#76)
+**Aktualisiert:** 2026-07-09 — Netlify-Referenzen entfernt: Das Repo läuft seit PR #44 auf Cloudflare Workers (Deploy automatisch bei Push auf `main` via Cloudflare-GitHub-App), und das Kontaktformular wird vom Worker selbst verarbeitet (Turnstile + SMTP), nicht mehr von Netlify Forms. Die Mechanik dieses Plans ist davon unberührt.
 **Ergänzt:** [PR #33 — Obsidian Sync Headless Pipeline](https://github.com/stefanhoth/stefanhoth.github.io/pull/33) (Sync-Hälfte). Dieses Dokument beschreibt die Ingestion-Hälfte.
 
 ---
@@ -18,7 +19,7 @@ vault/*.md  (flach, 1 Seite = 1 Datei)
 Zod-Schema-Validierung  ← kaputte Frontmatter = Build-Abbruch
      ↓  render() zur Build-Zeit
 statisches HTML in Layout.astro (kein Client-JS)
-     ↓  Netlify-Build
+     ↓  Cloudflare-Workers-Build (bei Push auf main)
 stefanhoth.com
 ```
 
@@ -38,7 +39,7 @@ stefanhoth.com
 | --------------------------------------- | ------------------------------------------------ |
 | Tagline, JobHunt-Text, About-Body        | `LatestPost` (dynamischer RSS-Fetch, Build-Time) |
 | Title/Description (SEO) pro Seite        | `Links` (SVG-Icons, Photography-TODO)            |
-| Ganze Seiten: Projekte, READMEs          | `ContactForm` (Netlify Forms)                    |
+| Ganze Seiten: Projekte, READMEs          | `ContactForm` (Worker: Turnstile + SMTP)         |
 |                                          | `Profile`-Gerüst (Name, Bild, Standort)          |
 
 Bewusster Trade-off: Die Links-Liste bleibt in `Links.astro`, obwohl sie Text enthält. Verschachteltes YAML (Liste von Objekten mit Label/URL/Icon) lässt sich in Obsidians Properties-UI nicht sauber editieren und wäre fehleranfällig. Einfache Skalar-Felder dagegen schon — deshalb liegt alles, was aus dem Vault kommt, entweder im Markdown-Body oder in flachen Frontmatter-Feldern.
@@ -230,7 +231,7 @@ Die gerenderten Markdown-Seiten bekommen damit über `class="prose"` konsistente
 
 1. **Nur Root-`*.md` wird ingested** → keine Streu-Notiz, kein Unterordner, keine Obsidian-Konfig kann den Build beeinflussen
 2. **`publish: false` als Default** → halbfertige Notes gehen nie live, Veröffentlichen ist eine bewusste Entscheidung in Obsidian
-3. **Zod-Validierung** → kaputte Frontmatter einer publizierten Seite lässt den Netlify-Build **laut** fehlschlagen; die letzte gute Version bleibt online
+3. **Zod-Validierung** → kaputte Frontmatter einer publizierten Seite lässt den Cloudflare-Build **laut** fehlschlagen; die letzte gute Version bleibt online
 4. **`home.md` ist Pflicht** → fehlt sie, bricht der Build sofort, statt eine leere Homepage zu deployen
 
 ## Offene Punkte
@@ -241,6 +242,6 @@ Die gerenderten Markdown-Seiten bekommen damit über `class="prose"` konsistente
 
 ## Bestehende Infrastruktur bleibt unverändert
 
-- Astro 5 + Tailwind 4 + Netlify (Deployment)
+- Astro 5 + Tailwind 4 + Cloudflare Workers (Deployment)
 - `@astrojs/mdx` ist bereits installiert; für den Vault reicht plain Markdown
 - Der Sync-Workflow aus PR #33 baut später unverändert auf dieser Struktur auf
