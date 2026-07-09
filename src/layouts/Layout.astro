@@ -1,5 +1,8 @@
 ---
 import "../styles/global.css";
+import SiteHeader from "../components/SiteHeader.astro";
+
+const currentYear = new Date().getFullYear();
 
 const {
   title = "Stefan Hoth | Engineering Leader",
@@ -117,16 +120,19 @@ const {
       :root {
         --bg: #fafafa;
         --text: #111;
+        --text-muted: #5f6672;
         --accent: #0d6efd;
+        --open-dot: #059669;
         --card-bg: white;
         --border: #e5e7eb;
-        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
       }
 
       @media (prefers-color-scheme: dark) {
         :root {
           --bg: #111;
           --text: #fafafa;
+          --text-muted: #9ca3af;
+          --open-dot: #34d399;
           --card-bg: #1f2937;
           --border: #374151;
         }
@@ -150,38 +156,39 @@ const {
       }
 
       .profile {
-        text-align: center;
-        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
       }
 
       .photo {
-        width: 300px;
-        height: 300px;
+        width: 112px;
+        height: 112px;
         object-fit: cover;
-        margin: auto;
+        border-radius: 50%;
+        flex-shrink: 0;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
       }
 
       h1 {
-        font-size: 2.5rem;
-        margin: 0 0 0.5rem;
+        font-size: 2rem;
+        margin: 0 0 0.25rem;
         font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
       }
 
       .tagline {
-        font-size: 1.1rem;
-        color: #666;
+        font-size: 1.05rem;
+        color: var(--text-muted);
         margin: 0 0 0.5rem;
       }
 
-      @media (prefers-color-scheme: dark) {
-        .tagline {
-          color: #9ca3af;
-        }
-      }
-
       .location {
-        font-size: 0.95rem;
-        color: #666;
+        font-size: 0.9rem;
+        color: var(--text-muted);
         margin: 0;
         display: inline-flex;
         align-items: center;
@@ -194,27 +201,23 @@ const {
         display: inline-block;
       }
 
-      @media (prefers-color-scheme: dark) {
-        .location {
-          color: #9ca3af;
-        }
-      }
-
       .job-hunt {
-        background: linear-gradient(135deg, var(--accent), #0ea5e9);
-        color: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        text-align: center;
-        font-weight: 600;
-        font-size: 1.2rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        font-size: 1rem;
         margin-bottom: 2rem;
-        box-shadow: var(--shadow);
       }
 
-      .job-hunt strong {
-        display: block;
-        margin-top: 0.5rem;
+      .job-hunt::before {
+        content: "";
+        display: inline-block;
+        width: 0.55em;
+        height: 0.55em;
+        border-radius: 50%;
+        background: var(--open-dot);
+        margin-right: 0.6em;
       }
 
       .about {
@@ -233,7 +236,7 @@ const {
 
       .latest-post .label {
         font-size: 0.875rem;
-        color: #666;
+        color: var(--text-muted);
         margin: 0 0 0.25rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -241,12 +244,13 @@ const {
 
       .latest-post h3 {
         font-size: 1.125rem;
+        font-weight: 600;
         margin: 0;
       }
 
       .latest-post .date {
         font-size: 0.875rem;
-        color: #666;
+        color: var(--text-muted);
         margin: 0.25rem 0 0;
       }
 
@@ -259,51 +263,45 @@ const {
         text-decoration: underline;
       }
 
-      @media (prefers-color-scheme: dark) {
-        .latest-post .label,
-        .latest-post .date {
-          color: #9ca3af;
-        }
+      .section-title {
+        font-size: 1.15rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        margin: 0 0 1rem;
       }
 
       .links {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-        margin-bottom: 2rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 2.5rem;
       }
 
       .link {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        justify-content: center;
+        gap: 0.5rem;
         background: var(--card-bg);
-        padding: 1.5rem;
-        border-radius: 12px;
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
         text-decoration: none;
         color: var(--text);
+        font-size: 0.95rem;
         border: 1px solid var(--border);
-        transition: all 0.2s;
-        box-shadow: var(--shadow);
-        aspect-ratio: 1;
+        transition:
+          border-color 0.15s,
+          color 0.15s;
       }
 
       .link:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         border-color: var(--accent);
         color: var(--accent);
       }
 
       .link .logo {
-        width: 70%;
-        height: auto;
-        max-width: 120px;
-        transition: transform 0.2s;
-      }
-
-      .link:hover .logo {
-        transform: scale(1.1);
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
       }
 
       form {
@@ -311,7 +309,14 @@ const {
         padding: 2rem;
         border-radius: 12px;
         border: 1px solid var(--border);
-        box-shadow: var(--shadow);
+      }
+
+      .site-footer {
+        margin-top: 3rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+        font-size: 0.875rem;
+        color: var(--text-muted);
       }
 
       .contact-status {
@@ -405,21 +410,24 @@ const {
         body {
           padding: 1rem;
         }
+      }
+
+      @media (max-width: 480px) {
+        .profile {
+          flex-direction: column;
+          text-align: center;
+          gap: 1rem;
+        }
 
         h1 {
-          font-size: 2rem;
-        }
-
-        .job-hunt {
-          font-size: 1rem;
-          padding: 1.25rem;
-        }
-
-        .links {
-          grid-template-columns: 1fr;
+          font-size: 1.75rem;
         }
       }
     </style>
-    <slot />
+    <SiteHeader />
+    <main>
+      <slot />
+    </main>
+    <footer class="site-footer">© {currentYear} Stefan Hoth</footer>
   </body>
 </html>

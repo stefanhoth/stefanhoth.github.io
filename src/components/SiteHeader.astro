@@ -1,0 +1,83 @@
+---
+import { getCollection } from "astro:content";
+
+// The nav is derived from the published vault pages, so a new page with
+// `publish: true` shows up here without a code change. Links point at the
+// canonical URL (file-style `.md` permalinks included) to avoid the
+// Worker's 301 redirect hop.
+const pages = await getCollection("pages", ({ data }) => data.publish);
+
+const navItems = pages
+  .map((page) => {
+    const slug = page.data.permalink ?? page.id;
+    return {
+      href: `/${slug}`,
+      label: page.data.title,
+      key: slug.replace(/\.md$/, ""),
+    };
+  })
+  .sort((a, b) => a.label.localeCompare(b.label));
+
+const currentKey = Astro.url.pathname
+  .replace(/\.md$/, "")
+  .replace(/\/$/, "")
+  .replace(/^\//, "");
+---
+
+<header class="site-header">
+  <a class="wordmark" href="/">Stefan Hoth</a>
+  <nav aria-label="Site">
+    {
+      navItems.map((item) => (
+        <a
+          href={item.href}
+          aria-current={item.key === currentKey ? "page" : undefined}
+        >
+          {item.label}
+        </a>
+      ))
+    }
+  </nav>
+</header>
+
+<style>
+  .site-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    padding-bottom: 1rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .wordmark {
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+  }
+
+  nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+
+  nav a:hover {
+    color: var(--accent);
+  }
+
+  nav a[aria-current="page"] {
+    color: var(--text);
+    font-weight: 600;
+  }
+</style>

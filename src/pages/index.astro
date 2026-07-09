@@ -19,6 +19,12 @@ const { Content: AboutContent } = await render(home);
     <AboutContent />
   </About>
   <LatestPost />
-  <Links />
-  <ContactForm />
+  <section aria-labelledby="elsewhere-title">
+    <h2 class="section-title" id="elsewhere-title">Elsewhere</h2>
+    <Links />
+  </section>
+  <section aria-labelledby="contact-title">
+    <h2 class="section-title" id="contact-title">Get in touch</h2>
+    <ContactForm />
+  </section>
 </Layout>
