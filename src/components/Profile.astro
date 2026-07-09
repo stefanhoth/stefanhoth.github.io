@@ -1,4 +1,7 @@
 ---
+import { Image } from "astro:assets";
+import profilePhoto from "../assets/profile.png";
+
 interface Props {
   tagline: string;
 }
@@ -7,7 +10,17 @@ const { tagline } = Astro.props;
 ---
 
 <div class="profile">
-  <img src="/img/profile/profile.png" alt="Stefan Hoth" class="photo" width="300" height="300" />
+  <Image
+    src={profilePhoto}
+    alt="Stefan Hoth"
+    class="photo"
+    width={300}
+    height={300}
+    densities={[1, 2]}
+    format="webp"
+    loading="eager"
+    fetchpriority="high"
+  />
   <h1>Stefan Hoth</h1>
   <p class="tagline">{tagline}</p>
   <p class="location">Based near Dresden, Germany</p>
