@@ -30,8 +30,9 @@ const pages = defineCollection({
         .optional(),
       // Page template. "sidebar" renders the content with a table-of-contents
       // sidebar linking to every h2 (extracted at build time by Astro's
-      // markdown pipeline, see src/pages/[slug].astro).
-      template: z.enum(["default", "sidebar"]).default("default"),
+      // markdown pipeline, see src/pages/[slug].astro). "projects" renders
+      // every h2 section as a card (see src/lib/rehypeProjectCards.js).
+      template: z.enum(["default", "sidebar", "projects"]).default("default"),
     })
     .superRefine((data, ctx) => {
       if (data.publish && !data.title) {
