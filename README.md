@@ -12,7 +12,6 @@ If you want to look under the hood, here's what powers this site:
 
 - **Framework**: Astro 5.16.6
 - **Styling**: Tailwind CSS 4.1.18
-- **UI Components**: Radix UI + shadcn/ui pattern
 - **Languages**: TypeScript, Astro components
 - **Linting & Formatting**: Biome 2.3.10
 - **Deployment**: Cloudflare Workers (wrangler)
