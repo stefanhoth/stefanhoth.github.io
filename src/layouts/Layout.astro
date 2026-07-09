@@ -162,14 +162,12 @@ const {
         margin-bottom: 2rem;
       }
 
+      /* The photo is a brush-stroke cutout with transparency — keep its
+         natural shape, no crop or frame. */
       .photo {
         width: 112px;
         height: 112px;
-        object-fit: cover;
-        border-radius: 50%;
         flex-shrink: 0;
-        background: var(--card-bg);
-        border: 1px solid var(--border);
       }
 
       h1 {
