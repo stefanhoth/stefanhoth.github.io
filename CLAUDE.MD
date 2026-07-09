@@ -8,7 +8,6 @@ This is Stefan Hoth's personal website built with Astro, showcasing professional
 
 - **Framework**: Astro 5.16.6
 - **Styling**: Tailwind CSS 4.1.18
-- **UI Components**: Radix UI + shadcn/ui pattern
 - **Languages**: TypeScript, Astro components
 - **Linting/Formatting**: Biome 2.3.10
 - **Deployment**: Cloudflare Workers (wrangler)
@@ -30,8 +29,7 @@ This is Stefan Hoth's personal website built with Astro, showcasing professional
 │   │   ├── JobHunt.astro
 │   │   ├── Links.astro
 │   │   ├── Profile.astro
-│   │   ├── Quote.astro
-│   │   └── ui/          # React UI components (shadcn/ui)
+│   │   └── Quote.astro
 │   ├── layouts/
 │   │   └── Layout.astro # Base layout
 │   ├── pages/
@@ -39,11 +37,10 @@ This is Stefan Hoth's personal website built with Astro, showcasing professional
 │   ├── styles/
 │   │   └── global.css   # Global styles
 │   └── lib/
-│       └── utils.ts     # Utility functions
+│       └── contactForm.js # Contact form frontend logic
 ├── astro.config.mjs     # Astro configuration
 ├── wrangler.jsonc       # Cloudflare Workers configuration
 ├── biome.json          # Biome linter/formatter config
-├── components.json     # shadcn/ui components config
 └── tsconfig.json       # TypeScript configuration
 ```
 
@@ -77,7 +74,6 @@ npm run worker:deploy # Build, then deploy the Worker to Cloudflare
 - Component-based architecture with Astro
 - Utility-first styling with Tailwind CSS
 - Type-safe development with TypeScript
-- Modern React components for interactive UI elements
 - Responsive design
 
 ## Configuration Notes
@@ -113,8 +109,7 @@ The site runs on Cloudflare Workers. A single Worker (`worker/index.js`, configu
 ### Adding New Components
 
 1. Create `.astro` files in `src/components/` for static content
-2. Use React/TypeScript in `src/components/ui/` for interactive components
-3. Import and use in `src/pages/index.astro`
+2. Import and use in `src/pages/index.astro`
 
 ### Styling
 
