@@ -4,6 +4,7 @@ import mdx from "@astrojs/mdx";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
 import wikiLink from "remark-wiki-link";
+import rehypeProjectCards from "./src/lib/rehypeProjectCards.js";
 
 // Vault files are the source of truth for what gets published and under
 // which URL. The filename provides the default slug; an optional
@@ -87,6 +88,7 @@ export default defineConfig({
           },
         ],
       ],
+      rehypePlugins: [rehypeProjectCards],
     }),
   },
 
