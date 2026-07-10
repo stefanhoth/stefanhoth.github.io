@@ -43,7 +43,7 @@ I came out with a lot of practical puzzle pieces I will be using in the future.
 
 **My AI agent never sees an API key - need-to-know, enforced by a proxy.**
 
-A small MCP security proxy that sits between my self-hosted AI agent (OpenClaw) and the external APIs it can call. It holds all the credentials and enforces an allowlist - closer to "responsible disclosure" than to "AI security": the agent runs on a need-to-know basis.
+crusty-proxy is an MCP that keeps API keys away from your AI agents and lets you cherry-pick their tools - read ✅, delete ⛔. Built for OpenClaw, works with any MCP client.
 
 ### The story
 
