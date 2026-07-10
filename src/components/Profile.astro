@@ -14,15 +14,17 @@ const { tagline } = Astro.props;
     src={profilePhoto}
     alt="Stefan Hoth"
     class="photo"
-    width={300}
-    height={300}
+    width={112}
+    height={112}
     densities={[1, 2]}
     format="webp"
     loading="eager"
     fetchpriority="high"
   />
-  <h1>Stefan Hoth</h1>
-  <p class="tagline">{tagline}</p>
-  <p class="location">Based near Dresden, Germany</p>
+  <div>
+    <h1>Stefan Hoth</h1>
+    <p class="tagline">{tagline}</p>
+    <p class="location">Based near Dresden, Germany</p>
+  </div>
 </div>
 

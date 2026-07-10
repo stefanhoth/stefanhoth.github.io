@@ -73,21 +73,21 @@ const bodyClass = useSidebar
       gap: 2.5rem;
     }
 
-    /* Content left, sidebar right; it stays in view while scrolling. */
+    /* Content left, sidebar right; it stays in view while scrolling,
+       parked below the sticky site header. */
     .toc-col {
       order: 2;
       position: sticky;
-      top: 2rem;
+      top: 5rem;
     }
   }
 </style>
 
 <style is:global>
-  /* Layout.astro caps the body at 600px for the single-column pages;
-     the sidebar template needs room for the extra column. */
-  body.toc-page {
-    max-width: 900px;
-  }
+  /* The 600px vs. 900px column width lives on `main` in Layout.astro
+     (body.toc-page main { max-width: 900px }) — body itself has no
+     width or centering, since it needs to span full-bleed under the
+     sticky header. */
 
   @media (prefers-reduced-motion: no-preference) {
     html {
@@ -95,42 +95,21 @@ const bodyClass = useSidebar
     }
   }
 
-  /* Breathing room above a heading after jumping to its anchor. */
+  /* Anchor jumps land below the sticky site header. */
   article.prose :is(h2, h3, h4) {
-    scroll-margin-top: 1.5rem;
+    scroll-margin-top: 5rem;
   }
 
   /* template: projects — each h2 section arrives pre-wrapped in
      <section class="project-card"> with an icon tile, a per-project
      --project-hue, and chip-ified meta lines (src/lib/rehypeProjectCards.js).
 
-     Layout: the page widens to 900px; the first project is featured
-     full-width, the rest flow into a two-column grid. Intro text keeps
-     a comfortable reading measure. */
-  body.projects-page {
-    max-width: 900px;
-    /* Soft ambient color wash for the frosted-glass cards to pick up.
-       (The body background propagates to the canvas, so this spans the
-       whole viewport.) */
-    background-image:
-      radial-gradient(
-        45rem 30rem at 82% -8%,
-        oklch(0.85 0.07 255 / 0.5),
-        transparent 70%
-      ),
-      radial-gradient(
-        40rem 30rem at 8% 55%,
-        oklch(0.88 0.06 160 / 0.45),
-        transparent 70%
-      ),
-      radial-gradient(
-        36rem 26rem at 95% 90%,
-        oklch(0.88 0.06 40 / 0.4),
-        transparent 70%
-      );
-    background-attachment: fixed;
-  }
-
+     Layout: the page widens to 900px (via body.projects-page main in
+     Layout.astro); the first project is featured full-width, the rest
+     flow into a two-column grid. Intro text keeps a comfortable reading
+     measure. The ambient color wash the frosted glass cards pick up is
+     site-wide, defined once on `body` in Layout.astro rather than
+     duplicated here. */
   body.projects-page article.prose {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -164,8 +143,9 @@ const bodyClass = useSidebar
   @supports (backdrop-filter: blur(1px)) {
     body.projects-page .project-card {
       background: color-mix(in oklab, var(--card-bg) 62%, transparent);
+      /* Only the unprefixed spelling: with both present, the CSS
+         minifier drops the standard property and keeps -webkit-. */
       backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
     }
   }
 
@@ -348,25 +328,6 @@ const bodyClass = useSidebar
   }
 
   @media (prefers-color-scheme: dark) {
-    body.projects-page {
-      background-image:
-        radial-gradient(
-          45rem 30rem at 82% -8%,
-          oklch(0.32 0.08 255 / 0.55),
-          transparent 70%
-        ),
-        radial-gradient(
-          40rem 30rem at 8% 55%,
-          oklch(0.3 0.07 160 / 0.5),
-          transparent 70%
-        ),
-        radial-gradient(
-          36rem 26rem at 95% 90%,
-          oklch(0.3 0.07 40 / 0.45),
-          transparent 70%
-        );
-    }
-
     body.projects-page .project-card:hover,
     body.projects-page .project-card:focus-within {
       border-color: oklch(0.55 0.1 var(--project-hue));

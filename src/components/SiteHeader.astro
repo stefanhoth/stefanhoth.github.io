@@ -1,0 +1,136 @@
+---
+import { getCollection } from "astro:content";
+
+// The nav is derived from the published vault pages, so a new page with
+// `publish: true` shows up here without a code change. Links point at the
+// canonical URL (file-style `.md` permalinks included) to avoid the
+// Worker's 301 redirect hop.
+//
+// Nav labels are presentation, not content, so they live here rather than
+// in the vault (same trade-off as the Links list, see the CMS plan). The
+// map's insertion order is the nav order; pages not listed fall back to
+// their title and sort behind, alphabetically.
+const NAV_LABELS = new Map([
+  ["employee-readme", "How I show up"],
+  ["manager-readme", "How I manage"],
+  ["projects", "What I built"],
+]);
+
+const pages = await getCollection("pages", ({ data }) => data.publish);
+const knownOrder = [...NAV_LABELS.keys()];
+
+const navItems = pages
+  .map((page) => {
+    const slug = page.data.permalink ?? page.id;
+    const key = slug.replace(/\.md$/, "");
+    return {
+      href: `/${slug}`,
+      label: NAV_LABELS.get(key) ?? page.data.title,
+      key,
+    };
+  })
+  .sort((a, b) => {
+    const rankA = knownOrder.indexOf(a.key);
+    const rankB = knownOrder.indexOf(b.key);
+    if (rankA !== -1 || rankB !== -1) {
+      return (
+        (rankA === -1 ? knownOrder.length : rankA) -
+        (rankB === -1 ? knownOrder.length : rankB)
+      );
+    }
+    return a.label.localeCompare(b.label);
+  });
+
+const currentKey = Astro.url.pathname
+  .replace(/\.md$/, "")
+  .replace(/\/$/, "")
+  .replace(/^\//, "");
+
+// The homepage hero already carries the name — no wordmark there.
+const isHome = currentKey === "";
+---
+
+<header class="site-header">
+  <div class="site-header-inner">
+    {!isHome && <a class="wordmark" href="/">Stefan Hoth</a>}
+    <nav aria-label="Site">
+      {
+        navItems.map((item) => (
+          <a
+            href={item.href}
+            aria-current={item.key === currentKey ? "page" : undefined}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+  </div>
+</header>
+
+<style>
+  /* Sticky frosted-glass bar, edge-to-edge so it matches the ambient
+     background wash spanning the full viewport (see Layout.astro) — the
+     900px content column is centered inside it via .site-header-inner,
+     same width as `main`. */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg) 72%, transparent);
+    backdrop-filter: blur(12px);
+  }
+
+  @supports not (backdrop-filter: blur(1px)) {
+    .site-header {
+      background: var(--bg);
+    }
+  }
+
+  /* Matches `main`'s default 600px measure (Layout.astro) so the nav
+     lines up with the content below it; body.toc-page/.projects-page
+     widen both together to 900px (see Layout.astro). */
+  .site-header-inner {
+    max-width: 600px;
+    margin-inline: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    padding: 1.25rem 1rem 1rem;
+  }
+
+  .wordmark {
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.5rem;
+    margin-left: auto;
+  }
+
+  nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: color 0.15s;
+  }
+
+  nav a:hover {
+    color: var(--accent);
+  }
+
+  nav a[aria-current="page"] {
+    color: var(--text);
+    font-weight: 600;
+  }
+</style>
