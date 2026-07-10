@@ -140,6 +140,7 @@ The frontend widget needs `PUBLIC_TURNSTILE_SITE_KEY` at build time.
 ## Git Workflow
 
 - Commit incrementally per logical step, not one bundled commit at the end.
+- PR titles must be valid Conventional Commit messages (e.g. `feat(ui): add X`, `fix(worker): handle Y`), since they are used as the squash commit message on merge.
 - Once a chunk of work is done and verified (build/tests pass), push the branch and open a PR automatically — no need to ask each time. This does not extend to merging a PR or force-pushing; those still require explicit confirmation.
 
 ## Recent Changes
