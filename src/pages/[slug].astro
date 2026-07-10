@@ -73,11 +73,12 @@ const bodyClass = useSidebar
       gap: 2.5rem;
     }
 
-    /* Content left, sidebar right; it stays in view while scrolling. */
+    /* Content left, sidebar right; it stays in view while scrolling,
+       parked below the sticky site header. */
     .toc-col {
       order: 2;
       position: sticky;
-      top: 2rem;
+      top: 5rem;
     }
   }
 </style>
@@ -95,9 +96,9 @@ const bodyClass = useSidebar
     }
   }
 
-  /* Breathing room above a heading after jumping to its anchor. */
+  /* Anchor jumps land below the sticky site header. */
   article.prose :is(h2, h3, h4) {
-    scroll-margin-top: 1.5rem;
+    scroll-margin-top: 5rem;
   }
 
   /* template: projects — each h2 section arrives pre-wrapped in

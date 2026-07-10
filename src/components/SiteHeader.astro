@@ -5,27 +5,53 @@ import { getCollection } from "astro:content";
 // `publish: true` shows up here without a code change. Links point at the
 // canonical URL (file-style `.md` permalinks included) to avoid the
 // Worker's 301 redirect hop.
+//
+// Nav labels are presentation, not content, so they live here rather than
+// in the vault (same trade-off as the Links list, see the CMS plan). The
+// map's insertion order is the nav order; pages not listed fall back to
+// their title and sort behind, alphabetically.
+const NAV_LABELS = new Map([
+  ["employee-readme", "How I show up"],
+  ["manager-readme", "How I manage"],
+  ["projects", "What I built"],
+]);
+
 const pages = await getCollection("pages", ({ data }) => data.publish);
+const knownOrder = [...NAV_LABELS.keys()];
 
 const navItems = pages
   .map((page) => {
     const slug = page.data.permalink ?? page.id;
+    const key = slug.replace(/\.md$/, "");
     return {
       href: `/${slug}`,
-      label: page.data.title,
-      key: slug.replace(/\.md$/, ""),
+      label: NAV_LABELS.get(key) ?? page.data.title,
+      key,
     };
   })
-  .sort((a, b) => a.label.localeCompare(b.label));
+  .sort((a, b) => {
+    const rankA = knownOrder.indexOf(a.key);
+    const rankB = knownOrder.indexOf(b.key);
+    if (rankA !== -1 || rankB !== -1) {
+      return (
+        (rankA === -1 ? knownOrder.length : rankA) -
+        (rankB === -1 ? knownOrder.length : rankB)
+      );
+    }
+    return a.label.localeCompare(b.label);
+  });
 
 const currentKey = Astro.url.pathname
   .replace(/\.md$/, "")
   .replace(/\/$/, "")
   .replace(/^\//, "");
+
+// The homepage hero already carries the name — no wordmark there.
+const isHome = currentKey === "";
 ---
 
 <header class="site-header">
-  <a class="wordmark" href="/">Stefan Hoth</a>
+  {!isHome && <a class="wordmark" href="/">Stefan Hoth</a>}
   <nav aria-label="Site">
     {
       navItems.map((item) => (
@@ -41,15 +67,29 @@ const currentKey = Astro.url.pathname
 </header>
 
 <style>
+  /* Sticky frosted-glass bar: translucent over the content scrolling
+     beneath it. The body's top padding lives here so the bar sits flush
+     with the viewport when stuck. */
   .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
     gap: 0.5rem 1.5rem;
-    padding-bottom: 1rem;
+    padding: 1.25rem 0 1rem;
     margin-bottom: 2.5rem;
     border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg) 72%, transparent);
+    backdrop-filter: blur(12px);
+  }
+
+  @supports not (backdrop-filter: blur(1px)) {
+    .site-header {
+      background: var(--bg);
+    }
   }
 
   .wordmark {
@@ -63,13 +103,15 @@ const currentKey = Astro.url.pathname
   nav {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.25rem 1.25rem;
+    gap: 0.25rem 1.5rem;
+    margin-left: auto;
   }
 
   nav a {
     color: var(--text-muted);
     text-decoration: none;
     font-size: 0.95rem;
+    transition: color 0.15s;
   }
 
   nav a:hover {
