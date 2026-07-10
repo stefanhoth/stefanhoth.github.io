@@ -159,26 +159,19 @@ const {
         box-sizing: border-box;
       }
 
-      /* Without an explicit background here, the body's background (the
-         ambient gradient below) would propagate to paint the entire
-         canvas per the CSS spec — wider than body's own 900px box, and
-         wider than the sticky header sitting inside it. Giving html its
-         own flat background confines body's gradient to body's box, so
-         the header's edge lines up with where the color wash actually
-         ends instead of a hard seam appearing next to it. */
-      html {
-        background: var(--bg);
-      }
-
-      /* One shell width for every page: the header spans 900px
-         everywhere, so navigating doesn't shift the layout. The top
-         padding lives in the sticky header (SiteHeader.astro). */
+      /* The ambient gradient below is deliberately left to propagate from
+         body to the canvas (no background on html) — it should wash the
+         full viewport, not just body's own box. The sticky header spans
+         full width to match (SiteHeader.astro), with its wordmark/nav
+         content centered in an inner 900px wrapper — same width as
+         `main` below, so the page reads as one aligned column even
+         though the header bar itself is edge-to-edge. */
       body {
         font-family:
           -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
           "Helvetica Neue", Arial, sans-serif;
         margin: 0;
-        padding: 0 1rem 2rem;
+        padding-bottom: 2rem;
         background: var(--bg);
         /* Soft ambient color wash, site-wide (originally the projects
            template's background — promoted here so every page gets it).
@@ -202,20 +195,19 @@ const {
         background-attachment: fixed;
         color: var(--text);
         line-height: 1.6;
-        max-width: 900px;
-        margin-inline: auto;
       }
 
       /* Single-column pages keep a readable measure inside the shell;
-         the sidebar and projects templates use the full width. */
+         the sidebar and projects templates use the full 900px width. */
       main {
         max-width: 600px;
         margin-inline: auto;
+        padding-inline: 1rem;
       }
 
       body.toc-page main,
       body.projects-page main {
-        max-width: none;
+        max-width: 900px;
       }
 
       .profile {

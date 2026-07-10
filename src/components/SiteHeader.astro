@@ -51,35 +51,32 @@ const isHome = currentKey === "";
 ---
 
 <header class="site-header">
-  {!isHome && <a class="wordmark" href="/">Stefan Hoth</a>}
-  <nav aria-label="Site">
-    {
-      navItems.map((item) => (
-        <a
-          href={item.href}
-          aria-current={item.key === currentKey ? "page" : undefined}
-        >
-          {item.label}
-        </a>
-      ))
-    }
-  </nav>
+  <div class="site-header-inner">
+    {!isHome && <a class="wordmark" href="/">Stefan Hoth</a>}
+    <nav aria-label="Site">
+      {
+        navItems.map((item) => (
+          <a
+            href={item.href}
+            aria-current={item.key === currentKey ? "page" : undefined}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+  </div>
 </header>
 
 <style>
-  /* Sticky frosted-glass bar: translucent over the content scrolling
-     beneath it. The body's top padding lives here so the bar sits flush
-     with the viewport when stuck. */
+  /* Sticky frosted-glass bar, edge-to-edge so it matches the ambient
+     background wash spanning the full viewport (see Layout.astro) — the
+     900px content column is centered inside it via .site-header-inner,
+     same width as `main`. */
   .site-header {
     position: sticky;
     top: 0;
     z-index: 10;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.5rem 1.5rem;
-    padding: 1.25rem 0 1rem;
     margin-bottom: 2.5rem;
     border-bottom: 1px solid var(--border);
     background: color-mix(in srgb, var(--bg) 72%, transparent);
@@ -90,6 +87,17 @@ const isHome = currentKey === "";
     .site-header {
       background: var(--bg);
     }
+  }
+
+  .site-header-inner {
+    max-width: 900px;
+    margin-inline: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    padding: 1.25rem 1rem 1rem;
   }
 
   .wordmark {
