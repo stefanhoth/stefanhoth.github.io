@@ -274,6 +274,79 @@ const bodyClass = useSidebar
     color: oklch(0.4 0.08 var(--project-hue));
   }
 
+  /* Pitch: the strong-only paragraph right after the chips. */
+  body.projects-page .project-pitch {
+    font-size: 1.05rem;
+    line-height: 1.45;
+  }
+
+  body.projects-page .project-card .project-pitch + p {
+    margin-top: 0.625rem;
+  }
+
+  /* Collapsible sections (h3 groups → details), e.g. "The story". */
+  body.projects-page .project-details {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  body.projects-page .project-details summary {
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-muted, #666);
+  }
+
+  body.projects-page .project-details summary:hover {
+    color: oklch(0.55 0.13 var(--project-hue));
+  }
+
+  body.projects-page .project-details[open] summary {
+    margin-bottom: 0.5rem;
+  }
+
+  body.projects-page .project-details p {
+    font-size: 0.95rem;
+  }
+
+  /* Action row: the trailing all-links bullet list. */
+  body.projects-page .project-links {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0 0;
+    padding: 0;
+  }
+
+  body.projects-page .project-links li {
+    margin: 0;
+    padding: 0;
+  }
+
+  body.projects-page .project-links a {
+    display: inline-block;
+    padding: 0.35rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--text);
+  }
+
+  body.projects-page .project-links a::after {
+    content: " ↗";
+    font-size: 0.8em;
+    color: var(--text-muted, #666);
+  }
+
+  body.projects-page .project-links a:hover {
+    border-color: oklch(0.65 0.12 var(--project-hue));
+    color: oklch(0.5 0.13 var(--project-hue));
+  }
+
   @media (prefers-color-scheme: dark) {
     body.projects-page {
       background-image:
@@ -321,6 +394,14 @@ const bodyClass = useSidebar
     body.projects-page .project-meta .chip {
       background: oklch(0.3 0.04 var(--project-hue));
       color: oklch(0.82 0.06 var(--project-hue));
+    }
+
+    body.projects-page .project-details summary:hover {
+      color: oklch(0.78 0.1 var(--project-hue));
+    }
+
+    body.projects-page .project-links a:hover {
+      color: oklch(0.78 0.12 var(--project-hue));
     }
   }
 

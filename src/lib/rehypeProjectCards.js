@@ -12,6 +12,13 @@
 //   title so each project gets a stable, distinct color
 // - a paragraph holding nothing but an *emphasized* line directly after
 //   the title becomes a row of chips, split on "·"
+// - a paragraph holding nothing but a **strong** line (first paragraph
+//   after the chips) becomes the card's pitch line
+// - every h3 opens a collapsible section (<details>): the h3 text is the
+//   summary, everything up to the next h3 is the collapsed body — meant
+//   for "The story" / "Lessons learned"
+// - a trailing bullet list whose items are only links becomes the card's
+//   action row (e.g. GitHub, write-up, slides)
 
 const text = (value) => ({ type: "text", value });
 
@@ -64,14 +71,36 @@ function iconTile(h2) {
   ]);
 }
 
-// A paragraph whose only element child is a single <em> right after the
-// title is the card's meta line; its "·"-separated parts become chips.
-function isMetaParagraph(node) {
+function isParagraphWrappingOnly(node, tagName) {
   if (node?.type !== "element" || node.tagName !== "p") return false;
   const children = node.children.filter(
     (child) => child.type !== "text" || child.value.trim() !== "",
   );
-  return children.length === 1 && children[0].tagName === "em";
+  return children.length === 1 && children[0].tagName === tagName;
+}
+
+// A paragraph whose only element child is a single <em> right after the
+// title is the card's meta line; its "·"-separated parts become chips.
+const isMetaParagraph = (node) => isParagraphWrappingOnly(node, "em");
+
+// A paragraph holding nothing but a <strong> line is the pitch.
+const isPitchParagraph = (node) => isParagraphWrappingOnly(node, "strong");
+
+// A bullet list whose items each contain exactly one link and nothing
+// else is the card's action row.
+function isLinkList(node) {
+  if (node?.type !== "element" || node.tagName !== "ul") return false;
+  const items = node.children.filter((child) => child.type === "element");
+  return (
+    items.length > 0 &&
+    items.every((li) => {
+      if (li.tagName !== "li") return false;
+      const content = li.children.filter(
+        (child) => child.type !== "text" || child.value.trim() !== "",
+      );
+      return content.length === 1 && content[0].tagName === "a";
+    })
+  );
 }
 
 function toChips(paragraph) {
@@ -95,33 +124,74 @@ function buildCard(h2) {
   );
 }
 
+// Distributes a section's body nodes into the card: tags the meta line
+// (first element) and pitch (next element), folds h3 groups into
+// <details>, and appends a trailing link list as the action row.
+function fillCard(card, nodes) {
+  let linkList = null;
+  for (let i = nodes.length - 1; i >= 0; i--) {
+    const node = nodes[i];
+    if (node.type === "text" && node.value.trim() === "") continue;
+    if (isLinkList(node)) {
+      linkList = node;
+      nodes.splice(i, 1);
+    }
+    break;
+  }
+
+  let details = null;
+  let bodyElements = 0;
+
+  for (const node of nodes) {
+    if (node.type === "element" && node.tagName === "h3") {
+      details = el("details", { className: ["project-details"] }, [
+        el("summary", {}, node.children),
+      ]);
+      card.children.push(details);
+      continue;
+    }
+    if (node.type === "element" && details === null) {
+      if (bodyElements === 0 && isMetaParagraph(node)) {
+        toChips(node);
+      } else if (bodyElements <= 1 && isPitchParagraph(node)) {
+        node.properties.className = ["project-pitch"];
+      }
+      bodyElements += 1;
+    }
+    (details ?? card).children.push(node);
+  }
+
+  if (linkList) {
+    linkList.properties.className = ["project-links"];
+    card.children.push(linkList);
+  }
+}
+
 export default function rehypeProjectCards() {
   return (tree, file) => {
     if (file.data.astro?.frontmatter?.template !== "projects") return;
 
     const wrapped = [];
     let card = null;
-    // Only the first block after the title can be the meta line;
-    // whitespace-only text nodes between blocks don't close the slot.
-    let metaSlotOpen = false;
+    let body = [];
+
+    const flush = () => {
+      if (card) fillCard(card, body);
+      body = [];
+    };
 
     for (const node of tree.children) {
       if (node.type === "element" && node.tagName === "h2") {
+        flush();
         card = buildCard(node);
-        metaSlotOpen = true;
         wrapped.push(card);
       } else if (card) {
-        if (node.type === "element") {
-          if (metaSlotOpen && isMetaParagraph(node)) {
-            toChips(node);
-          }
-          metaSlotOpen = false;
-        }
-        card.children.push(node);
+        body.push(node);
       } else {
         wrapped.push(node);
       }
     }
+    flush();
 
     tree.children = wrapped;
   };
