@@ -84,11 +84,10 @@ const bodyClass = useSidebar
 </style>
 
 <style is:global>
-  /* Layout.astro caps the body at 600px for the single-column pages;
-     the sidebar template needs room for the extra column. */
-  body.toc-page {
-    max-width: 900px;
-  }
+  /* The 600px vs. 900px column width lives on `main` in Layout.astro
+     (body.toc-page main { max-width: 900px }) — body itself has no
+     width or centering, since it needs to span full-bleed under the
+     sticky header. */
 
   @media (prefers-reduced-motion: no-preference) {
     html {
