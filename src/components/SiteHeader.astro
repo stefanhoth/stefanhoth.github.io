@@ -89,8 +89,11 @@ const isHome = currentKey === "";
     }
   }
 
+  /* Matches `main`'s default 600px measure (Layout.astro) so the nav
+     lines up with the content below it; body.toc-page/.projects-page
+     widen both together to 900px (see Layout.astro). */
   .site-header-inner {
-    max-width: 900px;
+    max-width: 600px;
     margin-inline: auto;
     display: flex;
     flex-wrap: wrap;

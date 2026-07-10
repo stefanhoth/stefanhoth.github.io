@@ -198,7 +198,9 @@ const {
       }
 
       /* Single-column pages keep a readable measure inside the shell;
-         the sidebar and projects templates use the full 900px width. */
+         the sidebar and projects templates use the full 900px width.
+         The header's nav (.site-header-inner, SiteHeader.astro) widens
+         in lockstep so it always lines up with the content below it. */
       main {
         max-width: 600px;
         margin-inline: auto;
@@ -206,7 +208,9 @@ const {
       }
 
       body.toc-page main,
-      body.projects-page main {
+      body.projects-page main,
+      body.toc-page .site-header-inner,
+      body.projects-page .site-header-inner {
         max-width: 900px;
       }
 
