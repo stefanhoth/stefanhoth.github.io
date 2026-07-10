@@ -124,6 +124,92 @@ describe("rehypeProjectCards", () => {
     expect(later.properties.className).toBeUndefined();
   });
 
+  it("marks a strong-only paragraph after the chips as the pitch", () => {
+    const tree = {
+      type: "root",
+      children: [
+        el("h2", text("Project")),
+        el("p", el("em", text("Rust · CLI"))),
+        el("p", el("strong", text("One-line pitch."))),
+        el("p", text("Description")),
+      ],
+    };
+
+    run(tree, "projects");
+
+    const [, meta, pitch, description] = tree.children[0].children;
+    expect(meta.properties.className).toEqual(["project-meta"]);
+    expect(pitch.properties.className).toEqual(["project-pitch"]);
+    expect(description.properties.className).toBeUndefined();
+  });
+
+  it("folds each h3 group into a collapsible details section", () => {
+    const tree = {
+      type: "root",
+      children: [
+        el("h2", text("Project")),
+        el("p", text("Description")),
+        el("h3", text("The story")),
+        el("p", text("Story body")),
+        el("h3", text("Lessons learned")),
+        el("p", text("Lesson body")),
+      ],
+    };
+
+    run(tree, "projects");
+
+    const [, description, story, lessons] = tree.children[0].children;
+    expect(description.tagName).toBe("p");
+
+    expect(story.tagName).toBe("details");
+    expect(story.properties.className).toEqual(["project-details"]);
+    expect(story.children[0].tagName).toBe("summary");
+    expect(story.children[0].children[0].value).toBe("The story");
+    expect(story.children[1].children[0].value).toBe("Story body");
+
+    expect(lessons.children[0].children[0].value).toBe("Lessons learned");
+    expect(lessons.children[1].children[0].value).toBe("Lesson body");
+  });
+
+  it("turns a trailing all-links list into the action row, even after an h3 section", () => {
+    const tree = {
+      type: "root",
+      children: [
+        el("h2", text("Project")),
+        el("p", text("Description")),
+        el("h3", text("Lessons learned")),
+        el("p", text("Lesson body")),
+        el("ul", el("li", el("a", text("GitHub"))), el("li", el("a", text("Slides")))),
+      ],
+    };
+
+    run(tree, "projects");
+
+    const card = tree.children[0];
+    const links = card.children.at(-1);
+    expect(links.tagName).toBe("ul");
+    expect(links.properties.className).toEqual(["project-links"]);
+    // The details section keeps only its own body.
+    const details = card.children.at(-2);
+    expect(details.tagName).toBe("details");
+    expect(details.children.map((c) => c.tagName)).toEqual(["summary", "p"]);
+  });
+
+  it("keeps a list with non-link content out of the action row", () => {
+    const tree = {
+      type: "root",
+      children: [
+        el("h2", text("Project")),
+        el("ul", el("li", text("plain bullet")), el("li", el("a", text("GitHub")))),
+      ],
+    };
+
+    run(tree, "projects");
+
+    const list = tree.children[0].children.at(-1);
+    expect(list.properties.className).toBeUndefined();
+  });
+
   it("leaves pages with other templates untouched", () => {
     const children = [el("h2", text("Heading")), el("p", text("Body"))];
     const tree = { type: "root", children: [...children] };
