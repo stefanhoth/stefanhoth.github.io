@@ -34,14 +34,19 @@ function textContent(node) {
   return (node.children ?? []).map(textContent).join("");
 }
 
-// Stable 0-359 hue from the project title, so colors survive rebuilds
-// but differ between projects.
+// Curated set of cheerful oklch hues — a free 0-359 hue produced muddy
+// browns/olives for some titles. Order matters: existing projects keep
+// their color because the index comes from a stable title hash.
+const HUES = [25, 330, 140, 230, 280, 85, 190];
+
+// Stable hue from the project title, so colors survive rebuilds but
+// differ between projects.
 function hueFor(name) {
-  let hue = 0;
+  let hash = 0;
   for (const char of name) {
-    hue = (hue * 31 + char.codePointAt(0)) % 360;
+    hash = (hash * 31 + char.codePointAt(0)) >>> 0;
   }
-  return hue;
+  return HUES[hash % HUES.length];
 }
 
 const LEADING_EMOJI = /^(\p{Extended_Pictographic}️?)\s*/u;
