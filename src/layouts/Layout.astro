@@ -159,6 +159,17 @@ const {
         box-sizing: border-box;
       }
 
+      /* Without an explicit background here, the body's background (the
+         ambient gradient below) would propagate to paint the entire
+         canvas per the CSS spec — wider than body's own 900px box, and
+         wider than the sticky header sitting inside it. Giving html its
+         own flat background confines body's gradient to body's box, so
+         the header's edge lines up with where the color wash actually
+         ends instead of a hard seam appearing next to it. */
+      html {
+        background: var(--bg);
+      }
+
       /* One shell width for every page: the header spans 900px
          everywhere, so navigating doesn't shift the layout. The top
          padding lives in the sticky header (SiteHeader.astro). */
