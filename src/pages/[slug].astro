@@ -164,8 +164,9 @@ const bodyClass = useSidebar
   @supports (backdrop-filter: blur(1px)) {
     body.projects-page .project-card {
       background: color-mix(in oklab, var(--card-bg) 62%, transparent);
+      /* Only the unprefixed spelling: with both present, the CSS
+         minifier drops the standard property and keeps -webkit-. */
       backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
     }
   }
 
