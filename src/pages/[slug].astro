@@ -101,19 +101,95 @@ const bodyClass = useSidebar
   }
 
   /* template: projects — each h2 section arrives pre-wrapped in
-     <section class="project-card"> (src/lib/rehypeProjectCards.js). */
+     <section class="project-card"> with an icon tile, a per-project
+     --project-hue, and chip-ified meta lines (src/lib/rehypeProjectCards.js).
+
+     Layout: the page widens to 900px; the first project is featured
+     full-width, the rest flow into a two-column grid. Intro text keeps
+     a comfortable reading measure. */
+  body.projects-page {
+    max-width: 900px;
+  }
+
+  body.projects-page article.prose {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+    max-width: none;
+  }
+
+  body.projects-page article.prose > :not(.project-card) {
+    grid-column: 1 / -1;
+    max-width: 65ch;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
   body.projects-page .project-card {
+    grid-column: auto;
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 1.25rem 1.5rem;
-    margin: 1.25rem 0;
+    padding: 1.5rem;
+    margin: 0;
+    transition:
+      border-color 0.15s,
+      transform 0.15s;
+  }
+
+  body.projects-page .project-card:hover {
+    border-color: oklch(0.65 0.12 var(--project-hue));
+    transform: translateY(-2px);
+  }
+
+  /* The first project is the headliner. */
+  body.projects-page .project-card:first-of-type {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 700px) {
+    body.projects-page article.prose {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  body.projects-page .project-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    margin-bottom: 0.75rem;
+  }
+
+  /* Icon tile: leading emoji from the title, or a letter monogram,
+     tinted with the project's stable hue. */
+  body.projects-page .project-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    flex-shrink: 0;
+    border-radius: 10px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    background: oklch(0.93 0.05 var(--project-hue));
+    color: oklch(0.45 0.13 var(--project-hue));
+  }
+
+  body.projects-page .project-card:first-of-type .project-icon {
+    width: 3.25rem;
+    height: 3.25rem;
+    font-size: 1.5rem;
   }
 
   body.projects-page .project-card h2 {
-    margin: 0 0 0.5rem;
+    margin: 0;
     font-size: 1.25rem;
-    line-height: 1.4;
+    line-height: 1.3;
+  }
+
+  body.projects-page .project-card:first-of-type h2 {
+    font-size: 1.5rem;
   }
 
   body.projects-page .project-card h2 a {
@@ -122,7 +198,7 @@ const bodyClass = useSidebar
   }
 
   body.projects-page .project-card h2 a:hover {
-    color: var(--accent);
+    color: oklch(0.55 0.15 var(--project-hue));
     text-decoration: underline;
   }
 
@@ -141,23 +217,53 @@ const bodyClass = useSidebar
     margin-top: 0.75rem;
   }
 
-  /* Optional meta line: a paragraph holding nothing but an <em> right
-     after the title renders as a quiet fact row instead of italics,
-     e.g. *TypeScript · Gemini · browser-only*. */
-  body.projects-page .project-card h2 + p:has(> em:only-child) {
-    font-size: 0.875rem;
-    color: var(--text-muted, #666);
-    margin-bottom: 0.75rem;
+  /* Meta line chips (split from the *em* line by the rehype plugin). */
+  body.projects-page .project-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-bottom: 0.875rem;
   }
 
-  body.projects-page .project-card h2 + p:has(> em:only-child) em {
-    font-style: normal;
+  body.projects-page .project-meta .chip {
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1;
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+    background: oklch(0.93 0.03 var(--project-hue));
+    color: oklch(0.4 0.08 var(--project-hue));
   }
 
   @media (prefers-color-scheme: dark) {
-    body.projects-page .project-card h2 a::after,
-    body.projects-page .project-card h2 + p:has(> em:only-child) {
+    body.projects-page .project-card:hover {
+      border-color: oklch(0.55 0.1 var(--project-hue));
+    }
+
+    body.projects-page .project-icon {
+      background: oklch(0.32 0.06 var(--project-hue));
+      color: oklch(0.85 0.09 var(--project-hue));
+    }
+
+    body.projects-page .project-card h2 a:hover {
+      color: oklch(0.78 0.12 var(--project-hue));
+    }
+
+    body.projects-page .project-card h2 a::after {
       color: var(--text-muted, #9ca3af);
+    }
+
+    body.projects-page .project-meta .chip {
+      background: oklch(0.3 0.04 var(--project-hue));
+      color: oklch(0.82 0.06 var(--project-hue));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body.projects-page .project-card,
+    body.projects-page .project-card:hover {
+      transition: none;
+      transform: none;
     }
   }
 </style>
