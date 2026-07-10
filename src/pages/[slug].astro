@@ -106,29 +106,11 @@ const bodyClass = useSidebar
 
      Layout: the page widens to 900px; the first project is featured
      full-width, the rest flow into a two-column grid. Intro text keeps
-     a comfortable reading measure. */
+     a comfortable reading measure. The ambient color wash the frosted
+     glass cards pick up is site-wide, defined once on `body` in
+     Layout.astro rather than duplicated here. */
   body.projects-page {
     max-width: 900px;
-    /* Soft ambient color wash for the frosted-glass cards to pick up.
-       (The body background propagates to the canvas, so this spans the
-       whole viewport.) */
-    background-image:
-      radial-gradient(
-        45rem 30rem at 82% -8%,
-        oklch(0.85 0.07 255 / 0.5),
-        transparent 70%
-      ),
-      radial-gradient(
-        40rem 30rem at 8% 55%,
-        oklch(0.88 0.06 160 / 0.45),
-        transparent 70%
-      ),
-      radial-gradient(
-        36rem 26rem at 95% 90%,
-        oklch(0.88 0.06 40 / 0.4),
-        transparent 70%
-      );
-    background-attachment: fixed;
   }
 
   body.projects-page article.prose {
@@ -349,25 +331,6 @@ const bodyClass = useSidebar
   }
 
   @media (prefers-color-scheme: dark) {
-    body.projects-page {
-      background-image:
-        radial-gradient(
-          45rem 30rem at 82% -8%,
-          oklch(0.32 0.08 255 / 0.55),
-          transparent 70%
-        ),
-        radial-gradient(
-          40rem 30rem at 8% 55%,
-          oklch(0.3 0.07 160 / 0.5),
-          transparent 70%
-        ),
-        radial-gradient(
-          36rem 26rem at 95% 90%,
-          oklch(0.3 0.07 40 / 0.45),
-          transparent 70%
-        );
-    }
-
     body.projects-page .project-card:hover,
     body.projects-page .project-card:focus-within {
       border-color: oklch(0.55 0.1 var(--project-hue));
