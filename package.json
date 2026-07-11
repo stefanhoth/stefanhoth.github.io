@@ -30,7 +30,7 @@
     "@playwright/test": "^1.61.1",
     "@tailwindcss/typography": "^0.5.20",
     "jsdom": "^29.1.1",
-    "obsidian-headless": "^0.0.12",
+    "obsidian-headless": "^0.0.13",
     "remark-wiki-link": "^2.0.1",
     "vitest": "^4.1.10",
     "wrangler": "^4.107.0"
