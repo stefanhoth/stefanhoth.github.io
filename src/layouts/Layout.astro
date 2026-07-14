@@ -285,6 +285,20 @@ const {
         margin-bottom: 1rem;
       }
 
+      /* Tailwind's preflight resets `a` to `color: inherit`, so links
+         inside the markdown-rendered intro (no .prose wrapper here) need
+         their own color to stand out from the surrounding text. */
+      .about a {
+        color: var(--accent);
+        text-decoration: underline;
+        text-decoration-color: color-mix(in oklab, var(--accent) 40%, transparent);
+        text-underline-offset: 2px;
+      }
+
+      .about a:hover {
+        text-decoration-color: var(--accent);
+      }
+
       .latest-post {
         margin-bottom: 2rem;
         padding: 1rem 1.25rem;
