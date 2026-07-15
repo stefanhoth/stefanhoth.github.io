@@ -14,7 +14,7 @@ A few things I've built on the side - mostly scratching my own itches around AI 
 
 *TypeScript · Gemini · Gemma4· runs entirely in the browser*
 
-**Turn rough memories into interview-ready STAR stories - and see your gaps before the interview does.**
+**Turn rough memories into interview-ready STAR stories - and see your gaps before the interviewer does.**
 
 This little browser app, running locally without any server or login, helps you frame your experience into stories everyone can understand. Speak or paste a rough description of something that happened, and Gemini turns it into a polished story following the STAR method (Situation, Task, Action, Result) - then maps it against the competencies a specific job posting is likely to probe for. Everything runs in the browser; nothing leaves your machine except the API calls made with your own key.
 
