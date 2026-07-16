@@ -2,17 +2,18 @@
 // (one per published vault page, plus home.png for the front page and
 // default.png as the fallback Layout.astro uses for pages without one).
 //
-// The images are committed, not built on the fly: they only change when a
-// page's title/description changes, and committing them keeps the build
-// and dev server free of an image-rendering step. Re-run after editing
-// vault frontmatter:
+// Runs automatically as part of `npm run build` (see package.json), so
+// every deploy — including vault syncs that change a page's title or
+// description — ships up-to-date cards. The output is also committed so
+// `astro dev` (which serves public/ directly, without a build) has the
+// images; refresh the committed copies after frontmatter changes with:
 //
 //   npm run og:images
 //
 // Rendering: sharp composites an SVG (background wash + text, mirroring
 // the site's palette in src/layouts/Layout.astro) with the brush-stroke
 // profile cutout from src/assets/profile.png.
-import { mkdirSync, readdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import sharp from "sharp";
 
 const WIDTH = 1200;
@@ -168,7 +169,9 @@ async function renderCard(page) {
         top: Math.round((HEIGHT - photoSize) / 2),
       },
     ])
-    .png()
+    // Palette quantization keeps each card well under 300 KB — WhatsApp
+    // (and some other messengers) won't show a preview image above that.
+    .png({ palette: true, quality: 90, compressionLevel: 9 })
     .toBuffer();
 }
 
@@ -182,11 +185,11 @@ const pages = readdirSync(VAULT_DIR)
 for (const page of pages) {
   const card = await renderCard(page);
   const filename = page.isHome ? "home.png" : `${page.slug}.png`;
-  await sharp(card).toFile(new URL(filename, OUT_DIR).pathname);
+  writeFileSync(new URL(filename, OUT_DIR), card);
   console.log(`generated ${filename} (${page.title})`);
   if (page.isHome) {
     // Fallback image for any published page without a generated card.
-    await sharp(card).toFile(new URL("default.png", OUT_DIR).pathname);
+    writeFileSync(new URL("default.png", OUT_DIR), card);
     console.log("generated default.png (fallback)");
   }
 }

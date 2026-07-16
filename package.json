@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build",
+    "build": "npm run og:images && astro build",
     "preview": "astro preview",
     "og:images": "node scripts/generate-og-images.mjs",
     "astro": "astro",

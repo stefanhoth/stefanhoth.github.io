@@ -130,7 +130,7 @@ Frontmatter controls publishing:
 
 ### Social Sharing Previews
 
-`Layout.astro` emits per-page Open Graph / Twitter Card meta tags plus a per-page canonical URL (the `.md` form for file-style vault pages). The 1200×630 preview images live in `public/img/og/` — one per published vault page plus `home.png` (front page) and `default.png` (fallback for pages without a generated card). They are committed, not built on the fly: after changing a page's `title`/`description` frontmatter (via Obsidian) or adding a page, re-run `npm run og:images` (`scripts/generate-og-images.mjs`, renders with sharp) and commit the result.
+`Layout.astro` emits per-page Open Graph / Twitter Card meta tags plus a per-page canonical URL (the `.md` form for file-style vault pages). The 1200×630 preview images live in `public/img/og/` — one per published vault page plus `home.png` (front page) and `default.png` (fallback for pages without a generated card). `npm run build` regenerates them (`scripts/generate-og-images.mjs`, renders with sharp, palette-quantized to stay under WhatsApp's ~300 KB preview limit), so every deploy — including vault syncs that change frontmatter — ships current cards. They are also committed so `astro dev`, which serves `public/` without a build step, has them; refresh the committed copies with `npm run og:images` after frontmatter changes.
 
 ### Contact Form
 
