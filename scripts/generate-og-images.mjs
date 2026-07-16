@@ -2,11 +2,12 @@
 // (one per published vault page, plus home.png for the front page and
 // default.png as the fallback Layout.astro uses for pages without one).
 //
-// Runs automatically as part of `npm run build` (see package.json), so
-// every deploy — including vault syncs that change a page's title or
-// description — ships up-to-date cards. The output is also committed so
-// `astro dev` (which serves public/ directly, without a build) has the
-// images; refresh the committed copies after frontmatter changes with:
+// The cards are rendered from vault frontmatter (title/description), and
+// the vault sync workflow (.github/workflows/sync-vault.yml) is the only
+// thing that changes that frontmatter — it regenerates the cards and
+// commits them alongside the synced content. Output is deterministic, so
+// an unchanged vault produces byte-identical files and no commit churn.
+// Run manually after changing the card design or profile photo:
 //
 //   npm run og:images
 //
