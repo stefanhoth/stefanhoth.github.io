@@ -1,5 +1,7 @@
 ---
 import { getCollection, render } from "astro:content";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import TocSidebar from "@/components/TocSidebar.astro";
 import Layout from "@/layouts/Layout.astro";
 
@@ -34,12 +36,28 @@ const bodyClass = useSidebar
   : useProjects
     ? "projects-page"
     : undefined;
+
+// The URL the page is served under: file-style permalinks (`.md` suffix)
+// keep the suffix (the Worker serves them there and 301s the bare form),
+// folder-style pages get Astro's trailing-slash URL.
+const slug = (page.data.permalink ?? page.id).replace(/\.md$/, "");
+const canonicalPath = page.data.permalink?.endsWith(".md")
+  ? `/${page.data.permalink}`
+  : `/${slug}/`;
+
+// Per-page social card if scripts/generate-og-images.mjs produced one;
+// Layout falls back to the default card otherwise.
+const ogImage = existsSync(join(process.cwd(), `public/img/og/${slug}.png`))
+  ? `/img/og/${slug}.png`
+  : undefined;
 ---
 
 <Layout
   title={page.data.title}
   description={page.data.description}
   bodyClass={bodyClass}
+  canonicalPath={canonicalPath}
+  ogImage={ogImage}
 >
   {
     useSidebar ? (

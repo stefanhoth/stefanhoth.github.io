@@ -88,6 +88,14 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # The social preview cards in public/img/og/ are rendered from vault
+      # frontmatter (title/description), and this workflow is what changes
+      # that frontmatter — regenerate them here so they land in the same PR
+      # as the content they're derived from.
+      - name: Regenerate social preview cards
+        if: steps.changes.outputs.changed == 'true'
+        run: npm run og:images
+
       # First gate: catches broken frontmatter before it's even pushed to a
       # branch. ci.yml's own Build job is the second, required gate on the PR.
       - name: Validate build
@@ -108,7 +116,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git switch -c chore/sync-vault
-          git add vault/
+          git add vault/ public/img/og/
           git commit -m "chore(vault): sync from Obsidian"
           git push --force origin chore/sync-vault
 

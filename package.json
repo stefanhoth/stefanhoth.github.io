@@ -7,6 +7,7 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "og:images": "node scripts/generate-og-images.mjs",
     "astro": "astro",
     "lint": "biome lint .",
     "format": "biome format --write .",
@@ -32,6 +33,7 @@
     "jsdom": "^29.1.1",
     "obsidian-headless": "^0.0.13",
     "remark-wiki-link": "^2.0.1",
+    "sharp": "^0.35.3",
     "vitest": "^4.1.10",
     "wrangler": "^4.107.0"
   }
