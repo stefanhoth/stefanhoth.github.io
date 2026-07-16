@@ -314,6 +314,23 @@ const ogImageUrl = new URL(ogImage, Astro.site).href;
         margin-bottom: 1rem;
       }
 
+      /* Tailwind's preflight also strips list-style and margin/padding from
+         `ul`/`li`, so the markdown-rendered intro's bullet list needs its
+         own spacing and markers restored (no .prose wrapper here). */
+      .about ul {
+        list-style: disc;
+        margin: 0 0 1rem;
+        padding-left: 1.25rem;
+      }
+
+      .about li {
+        margin-bottom: 0.5rem;
+      }
+
+      .about li:last-child {
+        margin-bottom: 0;
+      }
+
       /* Tailwind's preflight resets `a` to `color: inherit`, so links
          inside the markdown-rendered intro (no .prose wrapper here) need
          their own color to stand out from the surrounding text. */
