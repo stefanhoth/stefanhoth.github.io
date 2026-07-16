@@ -6,7 +6,18 @@ const {
   title = "Stefan Hoth | Engineering Leader",
   description = "Engineering Leader building high-trust engineering organizations. Currently open to Director or Head of Engineering roles, remote-first.",
   bodyClass,
+  // The path the page is actually served under. Differs from the build
+  // path for file-style vault pages: Astro builds /<slug>/, the Worker
+  // serves /<slug>.md and 301s the bare form there (see worker/index.js) —
+  // so canonical/og:url must be the .md URL, not the build URL.
+  canonicalPath = "/",
+  // 1200×630 social preview card, pre-rendered into public/img/og/ by
+  // scripts/generate-og-images.mjs (npm run og:images).
+  ogImage = "/img/og/default.png",
 } = Astro.props;
+
+const canonicalUrl = new URL(canonicalPath, Astro.site).href;
+const ogImageUrl = new URL(ogImage, Astro.site).href;
 ---
 
 <!doctype html>
@@ -21,7 +32,24 @@ const {
     />
     <meta name="author" content="Stefan Hoth" />
     <title>{title}</title>
-    <link rel="canonical" href="https://stefanhoth.com" />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <!-- Social sharing previews (Open Graph for LinkedIn/Facebook/…, Twitter Cards) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Stefan Hoth" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={title} />
+    <meta property="og:locale" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
     <link
       rel="alternate"
       type="application/rss+xml"

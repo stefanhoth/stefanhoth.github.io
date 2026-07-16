@@ -12,7 +12,11 @@ const home = await getEntry("home", "home");
 const { Content: AboutContent } = await render(home);
 ---
 
-<Layout title={home.data.title} description={home.data.description}>
+<Layout
+  title={home.data.title}
+  description={home.data.description}
+  ogImage="/img/og/home.png"
+>
   <Profile tagline={home.data.tagline} />
   {home.data.jobhunt && <JobHunt text={home.data.jobhunt} />}
   <About>
