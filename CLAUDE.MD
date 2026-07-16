@@ -51,6 +51,7 @@ npm run dev        # Start dev server
 npm run build      # Build for production
 npm run preview    # Preview production build
 npm run lint       # Run Biome linter
+npm run og:images  # Regenerate the social preview cards in public/img/og/
 npm run format     # Format code with Biome
 npm run lint:fix   # Auto-fix linting issues
 npm run test       # Run Vitest (unit + jsdom) tests
@@ -126,6 +127,10 @@ Frontmatter controls publishing:
 - `permalink: <slug>` or `permalink: <slug>.md` — optional override of the filename-derived slug. With the `.md` suffix the page is published as a file-style URL (`/<slug>.md`); the bare and trailing-slash forms 301-redirect to it. The build writes those slugs to `dist/_file-style-pages.json` (integration in `astro.config.mjs`); the Worker reads that manifest at runtime, with `run_worker_first` in `wrangler.jsonc` routing page requests through it. Wikilinks resolve to the target's permalink.
 - `template: sidebar` — optional page template (default: `default`). Renders the content with a table-of-contents sidebar linking every h2 as a smooth-scroll anchor. The h2s are extracted at build time by Astro's markdown pipeline (`render()` returns `headings`; `rehypeHeadingIds` stamps the matching `id`s on the headings); `src/pages/[slug].astro` picks the layout, `src/components/TocSidebar.astro` renders the nav. On desktop the sidebar sits sticky right of the content, on mobile above it. Pages without any h2s fall back to the plain template.
 - `template: projects` — renders every h2 section as a project card: the first project featured full-width, the rest in a two-column grid (single column on mobile). The structure is built at build time by `src/lib/rehypeProjectCards.js` (registered in `astro.config.mjs`); the styles live in `src/pages/[slug].astro`. Conventions inside a section (all optional): an h2 that is a markdown link becomes the card's title link (with an ↗ hint); each card gets an icon tile — the title's leading emoji if it starts with one (e.g. `## [🔦 STARlog](url)`, the emoji is moved out of the title), otherwise a letter monogram — tinted with a stable per-project hue; a paragraph containing only an `*emphasized*` line directly after the title becomes a row of chips split on `·` (e.g. `*TypeScript · Gemini · browser-only*`); the next paragraph, if it contains only a `**strong**` line, becomes the card's pitch line; every h3 (e.g. `### The story`, `### Lessons learned`) opens a collapsed `<details>` section holding everything up to the next h3; a trailing bullet list whose items are only links becomes the card's action-button row.
+
+### Social Sharing Previews
+
+`Layout.astro` emits per-page Open Graph / Twitter Card meta tags plus a per-page canonical URL (the `.md` form for file-style vault pages). The 1200×630 preview images live in `public/img/og/` — one per published vault page plus `home.png` (front page) and `default.png` (fallback for pages without a generated card). They are committed, not built on the fly: after changing a page's `title`/`description` frontmatter (via Obsidian) or adding a page, re-run `npm run og:images` (`scripts/generate-og-images.mjs`, renders with sharp) and commit the result.
 
 ### Contact Form
 
